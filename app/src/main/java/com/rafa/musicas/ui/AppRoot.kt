@@ -1,5 +1,12 @@
 package com.rafa.musicas.ui
 
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+
+@Composable
+fun AppRoot() {
+    Text("App funcionando 🎵")
+}
 import android.content.Intent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
