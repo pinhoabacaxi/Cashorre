@@ -3,19 +3,15 @@ package com.rafa.musicas.data
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import androidx.media3.common.MediaItem // ADICIONADO
-import androidx.media3.common.MediaMetadata // ADICIONADO
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
-/**
- * Playlists are stored in: filesDir/midias/<playlistName>/
- * Tracks are copied into that folder.
- * Track order + display names stored in: filesDir/midias/<playlistName>/order.json
- */
+// --- MODELOS DE DADOS (Centralizados aqui para evitar Redeclaration) ---
 
 @Serializable
 data class TrackEntry(
@@ -24,17 +20,20 @@ data class TrackEntry(
     val author: String = "Desconhecido"
 )
 
-// Classe de UI que representa uma música na lista
+@Serializable
+data class PlaylistIndex(
+    val tracks: List<TrackEntry> = emptyList()
+)
+
 data class TrackItem(
     val fileName: String,
     val displayName: String,
     val author: String,
     val playlistName: String
 ) {
-    // FUNÇÃO ADICIONADA: Converte o modelo interno para o modelo do Player (Media3)
     fun toMediaItem(): MediaItem {
         return MediaItem.Builder()
-            .setMediaId(fileName) // Usamos o nome do arquivo como ID único
+            .setMediaId(fileName)
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setDisplayTitle(displayName)
@@ -45,10 +44,7 @@ data class TrackItem(
     }
 }
 
-@Serializable
-data class PlaylistIndex(
-    val tracks: List<TrackEntry> = emptyList()
-)
+// --- CLASSE PRINCIPAL ---
 
 class PlaylistStore(private val context: Context) {
 
@@ -120,7 +116,10 @@ class PlaylistStore(private val context: Context) {
         }
     }
 
-    fun importFromFolder(playlistName: String, treeUri: Uri, recursive: Boolean): Int {
+    /**
+     * Resolve o erro "Unresolved reference: addTracksFromTree" na SearchAndImportScreen
+     */
+    fun addTracksFromTree(playlistName: String, treeUri: Uri, recursive: Boolean): Int {
         val destFolder = File(mediaRoot(), playlistName)
         destFolder.mkdirs()
 
@@ -137,14 +136,17 @@ class PlaylistStore(private val context: Context) {
                 val name = doc.name ?: "track"
                 val destFile = uniqueFile(destFolder, name)
                 
-                context.contentResolver.openInputStream(doc.uri)?.use { input ->
-                    destFile.outputStream().use { output ->
-                        input.copyTo(output)
+                try {
+                    context.contentResolver.openInputStream(doc.uri)?.use { input ->
+                        destFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
                     }
+                    newTracks.add(TrackEntry(fileName = destFile.name, displayName = destFile.name))
+                    copied++
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-                
-                newTracks.add(TrackEntry(fileName = destFile.name, displayName = destFile.name))
-                copied++
             }
         }
 
@@ -166,7 +168,9 @@ class PlaylistStore(private val context: Context) {
         val file = File(File(mediaRoot(), playlistName), "order.json")
         return if (file.exists()) {
             try {
-                json.decodeFromString<PlaylistIndex>(file.readText())
+                val content = file.readText()
+                if (content.isBlank()) PlaylistIndex() 
+                else json.decodeFromString<PlaylistIndex>(content)
             } catch (e: Exception) {
                 PlaylistIndex()
             }
@@ -201,7 +205,7 @@ class PlaylistStore(private val context: Context) {
 
     private fun isAudio(n: String): Boolean {
         val lower = n.lowercase()
-        return lower.endsWith(".mp3") || lower.endsWith(".m4a")
+        return lower.endsWith(".mp3") || lower.endsWith(".m4a") || lower.endsWith(".wav")
     }
 
     private fun sanitizeName(name: String): String {
