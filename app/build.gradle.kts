@@ -5,10 +5,6 @@ plugins {
 }
 
 android {
-    lint {
-        abortOnError false
-        checkReleaseBuilds false
-    }
     buildFeatures {
     compose = true
 }
