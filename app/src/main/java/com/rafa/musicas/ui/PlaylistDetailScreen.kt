@@ -7,7 +7,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.* // MIGRADO PARA MATERIAL 3
+import androidx.compose.material3.* // Migrado para Material 3
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistDetailScreen(
     playlistName: String,
@@ -37,7 +38,6 @@ fun PlaylistDetailScreen(
     var name by remember { mutableStateOf(playlistName) }
     var items by remember { mutableStateOf(store.listTrackItems(name)) }
 
-    // Estados para diálogos
     var editDisplayFor by remember { mutableStateOf<String?>(null) }
     var deleteTrackFor by remember { mutableStateOf<String?>(null) }
     var showRenamePlaylist by remember { mutableStateOf(false) }
@@ -48,8 +48,7 @@ fun PlaylistDetailScreen(
     }
 
     Column(Modifier.fillMaxSize()) {
-        // Cabeçalho
-        SmallTopAppBar( // Componente Material 3
+        SmallTopAppBar(
             title = {
                 Column {
                     Text(name, style = MaterialTheme.typography.titleLarge)
@@ -71,7 +70,7 @@ fun PlaylistDetailScreen(
             }
         )
 
-        HorizontalDivider() // No Material 3, Divider virou HorizontalDivider
+        HorizontalDivider()
 
         if (items.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -93,7 +92,7 @@ fun PlaylistDetailScreen(
         }
     }
 
-    // --- DIÁLOGOS (Todos atualizados para Material 3) ---
+    // --- Diálogos Material 3 ---
 
     if (showRenamePlaylist) {
         var newName by remember { mutableStateOf(name) }
@@ -101,7 +100,12 @@ fun PlaylistDetailScreen(
             onDismissRequest = { showRenamePlaylist = false },
             title = { Text("Renomear Playlist") },
             text = {
-                OutlinedTextField(value = newName, onValueChange = { newName = it }, label = { Text("Novo nome") })
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("Novo nome") },
+                    singleLine = true
+                )
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -125,7 +129,12 @@ fun PlaylistDetailScreen(
             onDismissRequest = { editDisplayFor = null },
             title = { Text("Editar nome da faixa") },
             text = {
-                OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text("Nome exibido") })
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = { Text("Nome exibido") },
+                    singleLine = true
+                )
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -145,7 +154,7 @@ fun PlaylistDetailScreen(
         AlertDialog(
             onDismissRequest = { deleteTrackFor = null },
             title = { Text("Remover música?") },
-            text = { Text("Isto removerá a música da playlist.") },
+            text = { Text("Deseja remover esta música da playlist?") },
             confirmButton = {
                 TextButton(onClick = {
                     store.removeTrack(name, fileName, deleteFile = true)
@@ -167,17 +176,32 @@ fun TrackItemRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    ElevatedCard( // Componente Material 3
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        onClick = onClick
     ) {
-        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column(Modifier.weight(1f)) {
-                Text(item.mediaMetadata.displayTitle?.toString() ?: "Desconhecido", style = MaterialTheme.typography.titleMedium)
-                Text(item.mediaMetadata.artist?.toString() ?: "Autor desconhecido", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = item.mediaMetadata.displayTitle?.toString() ?: "Sem título",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = item.mediaMetadata.artist?.toString() ?: "Artista desconhecido",
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
-            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = null) }
-            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = null) }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = null)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = null)
+            }
         }
     }
 }
