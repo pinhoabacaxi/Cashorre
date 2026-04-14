@@ -38,8 +38,12 @@ android {
         
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = '1.8'
+        freeCompilerArgs += [
+            "-opt-in=androidx.media3.common.util.UnstableApi"
+        ]
     }
+}
 
     packaging {
         resources {
