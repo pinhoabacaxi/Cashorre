@@ -1,16 +1,12 @@
 package com.rafa.musicas.ui
 
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-
-@Composable
-fun AppRoot() {
-    Text("App funcionando 🎵")
-}
 import android.content.Intent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -31,11 +27,15 @@ private object Routes {
     const val PLAYLIST_DETAIL = "playlist/{name}"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppRoot() {
     val nav = rememberNavController()
     val context = LocalContext.current
-    LaunchedEffect(Unit) { context.startService(Intent(context, PlaybackService::class.java)) }
+
+    LaunchedEffect(Unit) {
+        context.startService(Intent(context, PlaybackService::class.java))
+    }
 
     val store = remember { PlaylistStore(context) }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -46,7 +46,13 @@ fun AppRoot() {
         drawerContent = {
             ModalDrawerSheet {
                 Spacer(Modifier.height(12.dp))
-                Text("Menu", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
+
+                Text(
+                    "Menu",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
+
                 NavigationDrawerItem(
                     label = { Text("Músicas") },
                     selected = false,
@@ -56,6 +62,7 @@ fun AppRoot() {
                     },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
+
                 NavigationDrawerItem(
                     label = { Text("Procurar músicas") },
                     selected = false,
@@ -73,28 +80,49 @@ fun AppRoot() {
                 TopAppBar(
                     title = { Text("Músicas") },
                     navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                        IconButton(onClick = {
+                            scope.launch { drawerState.open() }
+                        }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
                     }
                 )
             },
             bottomBar = { PlayerMiniBar() }
-        ) { padding ->
-            Box(Modifier.padding(padding)) {
-                NavHost(navController = nav, startDestination = Routes.PLAYLISTS) {
+        ) { paddingValues ->
+            Box(Modifier.padding(paddingValues)) {
+                NavHost(
+                    navController = nav,
+                    startDestination = Routes.PLAYLISTS
+                ) {
                     composable(Routes.PLAYLISTS) {
-                        PlaylistsScreen(store = store, onOpen = { name -> nav.navigate("playlist/$name") })
+                        PlaylistsScreen(
+                            store = store,
+                            onOpen = { name ->
+                                nav.navigate("playlist/$name")
+                            }
+                        )
                     }
+
                     composable(Routes.SEARCH) {
                         SearchAndImportScreen(store = store)
                     }
+
                     composable(
                         route = Routes.PLAYLIST_DETAIL,
-                        arguments = listOf(navArgument("name") { type = NavType.StringType })
+                        arguments = listOf(
+                            navArgument("name") {
+                                type = NavType.StringType
+                            }
+                        )
                     ) { backStack ->
                         val name = backStack.arguments?.getString("name") ?: return@composable
-                        PlaylistDetailScreen(playlistName = name, store = store, onBack = { nav.popBackStack() })
+
+                        PlaylistDetailScreen(
+                            playlistName = name,
+                            store = store,
+                            onBack = { nav.popBackStack() }
+                        )
                     }
                 }
             }
