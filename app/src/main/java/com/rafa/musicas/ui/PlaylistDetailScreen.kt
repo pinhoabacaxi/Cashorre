@@ -1,6 +1,7 @@
 package com.rafa.musicas.ui
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.* // O asterisco importa todos os básicos de uma vez e limpa o erro
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
