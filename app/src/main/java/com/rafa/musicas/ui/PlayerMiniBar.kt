@@ -2,10 +2,13 @@ package com.rafa.musicas.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Alignment
 import androidx.media3.common.Player
 import com.rafa.musicas.player.PlayerManager
 import kotlin.math.roundToLong
@@ -29,9 +32,13 @@ fun PlayerMiniBar() {
                 isPlaying = isPlayingNew
             }
 
-            override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+            override fun onMediaItemTransition(
+                mediaItem: androidx.media3.common.MediaItem?,
+                reason: Int
+            ) {
                 val md = mediaItem?.mediaMetadata
-                title = md?.title?.toString() ?: (mediaItem?.localConfiguration?.uri?.lastPathSegment ?: "Tocando")
+                title = md?.title?.toString()
+                    ?: (mediaItem?.localConfiguration?.uri?.lastPathSegment ?: "Tocando")
                 artist = md?.artist?.toString()
             }
 
@@ -39,6 +46,7 @@ fun PlayerMiniBar() {
                 durationMs = player.duration.coerceAtLeast(0L)
             }
         }
+
         player.addListener(listener)
         onDispose { player.removeListener(listener) }
     }
@@ -52,10 +60,23 @@ fun PlayerMiniBar() {
     }
 
     Surface(shadowElevation = 10.dp) {
-        Column(Modifier.fillMaxWidth().padding(12.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1
+            )
+
             if (!artist.isNullOrBlank()) {
-                Text(artist!!, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                Text(
+                    artist!!,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1
+                )
             }
 
             val dur = durationMs
@@ -71,22 +92,30 @@ fun PlayerMiniBar() {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row {
                     IconButton(onClick = { player.seekToPrevious() }) {
                         Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior")
                     }
-                    IconButton(onClick = { if (isPlaying) player.pause() else player.play() }) {
-                        Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = "Play/Pause")
+
+                    IconButton(onClick = {
+                        if (isPlaying) player.pause() else player.play()
+                    }) {
+                        Icon(
+                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = "Play/Pause"
+                        )
                     }
+
                     IconButton(onClick = { player.seekToNext() }) {
                         Icon(Icons.Default.SkipNext, contentDescription = "Próxima")
                     }
                 }
 
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.VolumeUp, contentDescription = null)
+
                     Slider(
                         value = volume,
                         onValueChange = {
