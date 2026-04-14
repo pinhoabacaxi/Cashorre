@@ -1,5 +1,6 @@
 package com.rafa.musicas.ui
 
+import com.rafa.musicas.data.TrackItem
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -129,7 +130,7 @@ fun PlaylistDetailScreen(
 
 @Composable
 fun TrackItemRow(
-    item: PlaylistStore.TrackItem, // Corrigido para receber TrackItem
+    item: TrackItem, // Agora o import acima resolve isso
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
