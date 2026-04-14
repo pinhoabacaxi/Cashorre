@@ -8,6 +8,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rafa.musicas.data.PlaylistStore
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.ArrowBack // Exemplo comum
+import androidx.compose.material.icons.filled.MoreVert // Exemplo comum
 
 @Composable
 fun PlaylistsScreen(store: PlaylistStore, onOpen: (String) -> Unit) {
