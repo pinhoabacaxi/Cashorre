@@ -26,7 +26,8 @@ class MainActivity : ComponentActivity() {
                         requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 }
-                AppRoot()
+                val store = PlaylistStore(this)
+                AppRoot(store)
             }
         }
     }
