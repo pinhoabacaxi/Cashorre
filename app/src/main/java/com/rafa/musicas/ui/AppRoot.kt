@@ -1,10 +1,12 @@
 package com.rafa.musicas.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.* // Para Scaffold, TopAppBar e Text (Material 2)
+import androidx.compose.material.* // ESSENCIAL
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.rafa.musicas.data.PlaylistStore
+
 
 @Composable
 fun AppRoot(store: PlaylistStore) {
