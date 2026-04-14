@@ -1,5 +1,12 @@
 package com.rafa.musicas.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.ArrowBack // Exemplo comum
+import androidx.compose.material.icons.filled.MoreVert // Exemplo comum
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
