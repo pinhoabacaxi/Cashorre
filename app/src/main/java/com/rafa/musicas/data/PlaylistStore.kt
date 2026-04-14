@@ -3,6 +3,9 @@ package com.rafa.musicas.data
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import androidx.media3.common.MediaItem // ADICIONADO
+import androidx.media3.common.MediaMetadata // ADICIONADO
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -13,6 +16,40 @@ import java.io.File
  * Tracks are copied into that folder.
  * Track order + display names stored in: filesDir/midias/<playlistName>/order.json
  */
+
+@Serializable
+data class TrackEntry(
+    val fileName: String,
+    val displayName: String,
+    val author: String = "Desconhecido"
+)
+
+// Classe de UI que representa uma música na lista
+data class TrackItem(
+    val fileName: String,
+    val displayName: String,
+    val author: String,
+    val playlistName: String
+) {
+    // FUNÇÃO ADICIONADA: Converte o modelo interno para o modelo do Player (Media3)
+    fun toMediaItem(): MediaItem {
+        return MediaItem.Builder()
+            .setMediaId(fileName) // Usamos o nome do arquivo como ID único
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setDisplayTitle(displayName)
+                    .setArtist(author)
+                    .build()
+            )
+            .build()
+    }
+}
+
+@Serializable
+data class PlaylistIndex(
+    val tracks: List<TrackEntry> = emptyList()
+)
+
 class PlaylistStore(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
@@ -38,161 +75,114 @@ class PlaylistStore(private val context: Context) {
         return safe
     }
 
-    fun renamePlaylist(oldName: String, newName: String): String {
+    fun listTrackItems(playlistName: String): List<TrackItem> {
+        val idx = readIndex(playlistName)
+        return idx.tracks.map {
+            TrackItem(
+                fileName = it.fileName,
+                displayName = it.displayName,
+                author = it.author,
+                playlistName = playlistName
+            )
+        }
+    }
+
+    fun renamePlaylist(oldName: String, newName: String): Boolean {
         val oldFolder = File(mediaRoot(), oldName)
         val safe = sanitizeName(newName)
         val newFolder = File(mediaRoot(), safe)
-        if (oldFolder.exists() && oldFolder.isDirectory) {
+        return if (oldFolder.exists() && oldFolder.isDirectory && !newFolder.exists()) {
             oldFolder.renameTo(newFolder)
-        } else {
-            newFolder.mkdirs()
-        }
-        // Ensure order file exists
-        ensureOrderFile(safe)
-        val idx = readIndex(safe)
-        writeIndex(safe, idx.copy(playlistName = safe))
-        return safe
+        } else false
     }
 
     fun deletePlaylist(name: String) {
-        File(mediaRoot(), name).deleteRecursively()
-    }
-
-    fun playlistFolder(name: String): File = File(mediaRoot(), name)
-
-    private fun orderFile(playlistName: String): File =
-        File(playlistFolder(playlistName), "order.json")
-
-    private fun ensureOrderFile(playlistName: String) {
-        val folder = playlistFolder(playlistName)
-        if (!folder.exists()) folder.mkdirs()
-        val f = orderFile(playlistName)
-        if (!f.exists()) {
-            f.writeText(json.encodeToString(PlaylistIndex(playlistName, emptyList())))
-        }
-    }
-
-    fun readIndex(playlistName: String): PlaylistIndex {
-        ensureOrderFile(playlistName)
-        val f = orderFile(playlistName)
-        return runCatching { json.decodeFromString<PlaylistIndex>(f.readText()) }
-            .getOrElse { PlaylistIndex(playlistName, emptyList()) }
-    }
-
-    fun writeIndex(playlistName: String, index: PlaylistIndex) {
-        ensureOrderFile(playlistName)
-        orderFile(playlistName).writeText(json.encodeToString(index))
-    }
-
-    data class TrackItem(val entry: TrackEntry, val file: File)
-
-    fun listTrackItems(playlistName: String): List<TrackItem> {
-        val folder = playlistFolder(playlistName)
-        ensureOrderFile(playlistName)
-        val idx = readIndex(playlistName)
-
-        val filesByName = folder.listFiles()
-            ?.filter { it.isFile && isAudio(it.name) }
-            ?.associateBy { it.name }
-            ?: emptyMap()
-
-        val ordered = idx.tracks.mapNotNull { e ->
-            val f = filesByName[e.fileName] ?: return@mapNotNull null
-            TrackItem(e, f)
-        }
-
-        val remainingFiles = filesByName.values
-            .filter { f -> idx.tracks.none { it.fileName == f.name } }
-            .sortedBy { it.name }
-
-        // Append remaining files to index (default at end)
-        if (remainingFiles.isNotEmpty()) {
-            val updated = idx.tracks.toMutableList()
-            remainingFiles.forEach { f ->
-                updated.add(TrackEntry(fileName = f.name, displayName = f.name))
-            }
-            writeIndex(playlistName, idx.copy(tracks = updated))
-        }
-
-        val updatedIdx = readIndex(playlistName)
-        val updatedOrdered = updatedIdx.tracks.mapNotNull { e ->
-            val f = filesByName[e.fileName] ?: return@mapNotNull null
-            TrackItem(e, f)
-        }
-        return updatedOrdered
-    }
-
-    fun reorder(playlistName: String, from: Int, to: Int) {
-        val idx = readIndex(playlistName)
-        val tracks = idx.tracks.toMutableList()
-        if (from !in tracks.indices || to !in tracks.indices) return
-        val item = tracks.removeAt(from)
-        tracks.add(to, item)
-        writeIndex(playlistName, idx.copy(tracks = tracks))
+        val folder = File(mediaRoot(), name)
+        folder.deleteRecursively()
     }
 
     fun updateDisplayName(playlistName: String, fileName: String, newDisplayName: String) {
         val idx = readIndex(playlistName)
-        val updated = idx.tracks.map { t ->
-            if (t.fileName == fileName) t.copy(displayName = newDisplayName.trim().ifBlank { t.displayName })
-            else t
+        val updatedTracks = idx.tracks.map {
+            if (it.fileName == fileName) it.copy(displayName = newDisplayName) else it
         }
-        writeIndex(playlistName, idx.copy(tracks = updated))
+        writeIndex(playlistName, idx.copy(tracks = updatedTracks))
     }
 
-    fun removeTrack(playlistName: String, fileName: String, deleteFile: Boolean = true) {
-        val folder = playlistFolder(playlistName)
-        if (deleteFile) {
-            File(folder, fileName).delete()
-        }
+    fun removeTrack(playlistName: String, fileName: String, deleteFile: Boolean) {
         val idx = readIndex(playlistName)
-        val updated = idx.tracks.filterNot { it.fileName == fileName }
-        writeIndex(playlistName, idx.copy(tracks = updated))
+        val updatedTracks = idx.tracks.filter { it.fileName != fileName }
+        writeIndex(playlistName, idx.copy(tracks = updatedTracks))
+
+        if (deleteFile) {
+            val file = File(File(mediaRoot(), playlistName), fileName)
+            if (file.exists()) file.delete()
+        }
     }
 
-    fun addTracksFromTree(treeUri: Uri, playlistName: String, recursive: Boolean = true): Int {
-        val cr = context.contentResolver
-        val tree = DocumentFile.fromTreeUri(context, treeUri) ?: return 0
-        val destFolder = playlistFolder(playlistName)
-        if (!destFolder.exists()) destFolder.mkdirs()
-        ensureOrderFile(playlistName)
+    fun importFromFolder(playlistName: String, treeUri: Uri, recursive: Boolean): Int {
+        val destFolder = File(mediaRoot(), playlistName)
+        destFolder.mkdirs()
 
-        val audioDocs = mutableListOf<DocumentFile>()
-        fun walk(dir: DocumentFile) {
-            dir.listFiles().forEach { f ->
-                if (f.isDirectory && recursive) walk(f)
-                else if (f.isFile && isAudio(f.name ?: "")) audioDocs.add(f)
-            }
-        }
-        walk(tree)
+        val rootDoc = DocumentFile.fromTreeUri(context, treeUri) ?: return 0
+        val files = mutableListOf<DocumentFile>()
+        gatherFiles(rootDoc, files, recursive)
 
         var copied = 0
-        audioDocs.forEach { doc ->
-            val name = doc.name ?: return@forEach
-            val dest = uniqueFile(destFolder, name)
-            cr.openInputStream(doc.uri)?.use { input ->
-                dest.outputStream().use { out -> input.copyTo(out) }
+        val currentIdx = readIndex(playlistName)
+        val newTracks = currentIdx.tracks.toMutableList()
+
+        files.forEach { doc ->
+            if (isAudio(doc.name ?: "")) {
+                val name = doc.name ?: "track"
+                val destFile = uniqueFile(destFolder, name)
+                
+                context.contentResolver.openInputStream(doc.uri)?.use { input ->
+                    destFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                
+                newTracks.add(TrackEntry(fileName = destFile.name, displayName = destFile.name))
                 copied++
             }
         }
 
-        if (copied > 0) {
-            // Append new files at end
-            val idx = readIndex(playlistName)
-            val idxNames = idx.tracks.map { it.fileName }.toMutableSet()
-            val allFiles = destFolder.listFiles()
-                ?.filter { it.isFile && isAudio(it.name) }
-                ?.map { it.name }
-                ?: emptyList()
-            val newOnDisk = allFiles.filter { it !in idxNames }.sorted()
-            if (newOnDisk.isNotEmpty()) {
-                val updated = idx.tracks.toMutableList()
-                newOnDisk.forEach { fn -> updated.add(TrackEntry(fileName = fn, displayName = fn)) }
-                writeIndex(playlistName, idx.copy(tracks = updated))
+        writeIndex(playlistName, currentIdx.copy(tracks = newTracks))
+        return copied
+    }
+
+    private fun gatherFiles(doc: DocumentFile, list: MutableList<DocumentFile>, recursive: Boolean) {
+        doc.listFiles().forEach {
+            if (it.isDirectory && recursive) {
+                gatherFiles(it, list, true)
+            } else if (it.isFile) {
+                list.add(it)
             }
         }
+    }
 
-        return copied
+    private fun readIndex(playlistName: String): PlaylistIndex {
+        val file = File(File(mediaRoot(), playlistName), "order.json")
+        return if (file.exists()) {
+            try {
+                json.decodeFromString<PlaylistIndex>(file.readText())
+            } catch (e: Exception) {
+                PlaylistIndex()
+            }
+        } else {
+            PlaylistIndex()
+        }
+    }
+
+    private fun writeIndex(playlistName: String, index: PlaylistIndex) {
+        val file = File(File(mediaRoot(), playlistName), "order.json")
+        file.writeText(json.encodeToString(index))
+    }
+
+    private fun ensureOrderFile(playlistName: String) {
+        val file = File(File(mediaRoot(), playlistName), "order.json")
+        if (!file.exists()) writeIndex(playlistName, PlaylistIndex())
     }
 
     private fun uniqueFile(folder: File, name: String): File {
@@ -215,8 +205,6 @@ class PlaylistStore(private val context: Context) {
     }
 
     private fun sanitizeName(name: String): String {
-        val trimmed = name.trim().ifEmpty { "Playlist" }
-        val cleaned = trimmed.replace(Regex("[\\/:*?\"<>|]"), "_")
-        return cleaned.take(60)
+        return name.trim().replace(Regex("[^a-zA-Z0-9_\\-]"), "_").ifEmpty { "Playlist" }
     }
 }
