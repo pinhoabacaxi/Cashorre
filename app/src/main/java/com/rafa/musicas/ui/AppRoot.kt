@@ -2,11 +2,10 @@ package com.rafa.musicas.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.* // ESSENCIAL
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.rafa.musicas.data.PlaylistStore
-
 
 @Composable
 fun AppRoot(store: PlaylistStore) {
@@ -15,8 +14,12 @@ fun AppRoot(store: PlaylistStore) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Cashorre Player") })
+        },
+        bottomBar = {
+            PlayerMiniBar()
         }
     ) { innerPadding ->
+        // O Box PRECISA estar dentro das chaves do Scaffold para receber o padding
         Box(modifier = Modifier.padding(innerPadding)) {
             when (val s = currentScreen) {
                 is Screen.Playlists -> PlaylistsScreen(
@@ -31,13 +34,9 @@ fun AppRoot(store: PlaylistStore) {
                 is Screen.Import -> SearchAndImportScreen(store = store)
             }
         }
-        
-        // Se o seu player bar fica fixo embaixo, ele entra aqui:
-        PlayerMiniBar() 
     }
 }
 
-// Classe selada para controlar a navegação sem erros de digitação
 sealed class Screen {
     object Playlists : Screen()
     data class Details(val name: String) : Screen()
