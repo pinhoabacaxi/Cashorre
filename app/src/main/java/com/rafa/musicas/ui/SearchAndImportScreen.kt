@@ -33,6 +33,21 @@ fun SearchAndImportScreen(store: PlaylistStore) {
                     or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
 
             runCatching {
+                // ... dentro do runCatching no SearchAndImportScreen.kt
+                val targetPlaylist = if (newPlaylistName.isNotBlank()) {
+                    store.createPlaylist(newPlaylistName)
+                }   
+                    else {
+                    selectedPlaylist ?: "Playlist"
+                }
+
+// CORREÇÃO DA ORDEM: (String, Uri, Boolean)
+                val count = store.addTracksFromTree(targetPlaylist, uri, recursive) 
+
+                status = "Importadas $count músicas para $targetPlaylist"
+                playlists = store.listPlaylists()
+// ...
+
                 context.contentResolver.takePersistableUriPermission(uri, flags)
             }
 
