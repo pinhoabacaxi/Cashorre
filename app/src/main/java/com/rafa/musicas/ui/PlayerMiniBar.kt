@@ -1,13 +1,9 @@
 package com.rafa.musicas.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.* // Para Surface, Slider, IconButton, Text
+import androidx.compose.material.* // ESSENCIAL: Garante Surface, Text, Slider, IconButton
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import com.rafa.musicas.player.PlayerManager
 import kotlin.math.roundToLong
-import kotlinx.coroutines.delay
 
 @Composable
 fun PlayerMiniBar() {
