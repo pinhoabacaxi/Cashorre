@@ -7,7 +7,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.* // ADICIONADO: Para Icon, IconButton, Text, Divider, etc.
+import androidx.compose.material3.* // MIGRADO PARA MATERIAL 3
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -37,242 +37,95 @@ fun PlaylistDetailScreen(
     var name by remember { mutableStateOf(playlistName) }
     var items by remember { mutableStateOf(store.listTrackItems(name)) }
 
-    var showRename by remember { mutableStateOf(false) }
-    var newName by remember { mutableStateOf(name) }
-    var showDelete by remember { mutableStateOf(false) }
-
-    var editDisplayFor by remember { mutableStateOf<Pair<String, String>?>(null) } // (fileName, currentDisplay)
+    // Estados para diálogos
+    var editDisplayFor by remember { mutableStateOf<String?>(null) }
     var deleteTrackFor by remember { mutableStateOf<String?>(null) }
+    var showRenamePlaylist by remember { mutableStateOf(false) }
+    var showDeletePlaylist by remember { mutableStateOf(false) }
 
-    fun refresh() { items = store.listTrackItems(name) }
-
-    // Cache metadata in memory for UI and queue building
-    val metaCache = remember { mutableStateMapOf<String, com.rafa.musicas.player.TrackMeta>() }
-
-    suspend fun ensureMeta(file: File) {
-        val key = file.absolutePath
-        if (metaCache.containsKey(key)) return
-        val meta = withContext(Dispatchers.IO) { MetadataReader.read(context, file) }
-        metaCache[key] = meta
-        // Persist title/artist/duration into order.json (optional)
-        val entry = items.firstOrNull { it.file.absolutePath == key }?.entry
-        if (entry != null && (entry.title == null || entry.artist == null || entry.durationMs == null)) {
-            val idx = store.readIndex(name)
-            val updated = idx.tracks.map {
-                if (it.fileName == entry.fileName) it.copy(
-                    title = meta.title,
-                    artist = meta.artist,
-                    durationMs = meta.durationMs
-                ) else it
-            }
-            store.writeIndex(name, idx.copy(tracks = updated))
-            refresh()
-        }
-    }
-
-    LaunchedEffect(name) {
-        refresh()
-        // Preload metadata lazily (first few)
-        items.take(12).forEach { ensureMeta(it.file) }
+    fun refresh() {
+        items = store.listTrackItems(name)
     }
 
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            Row {
-                IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Voltar") }
-                Column(Modifier.padding(top = 6.dp)) {
+        // Cabeçalho
+        SmallTopAppBar( // Componente Material 3
+            title = {
+                Column {
                     Text(name, style = MaterialTheme.typography.titleLarge)
                     Text("${items.size} músicas", style = MaterialTheme.typography.bodySmall)
                 }
+            },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = null)
+                }
+            },
+            actions = {
+                IconButton(onClick = { showRenamePlaylist = true }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Renomear")
+                }
+                IconButton(onClick = { showDeletePlaylist = true }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Apagar")
+                }
             }
-            Row {
-                IconButton(onClick = { showRename = true }) { Icon(Icons.Default.Edit, contentDescription = "Renomear") }
-                IconButton(onClick = { showDelete = true }) { Icon(Icons.Default.Delete, contentDescription = "Apagar playlist") }
-            }
-        }
-
-        Divider()
-
-        Text(
-            "Dica: pressione e segure uma música para arrastar e reordenar.",
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
-        // Simple drag & drop reorder within LazyColumn
-        var draggingIndex by remember { mutableStateOf<Int?>(null) }
-        var dragOffset by remember { mutableStateOf(0f) }
+        HorizontalDivider() // No Material 3, Divider virou HorizontalDivider
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            itemsIndexed(items, key = { _, it -> it.file.name }) { idx, item ->
-                val file = item.file
-                val entry = item.entry
-                val metaKey = file.absolutePath
-                val meta = metaCache[metaKey]
-
-                LaunchedEffect(metaKey) { ensureMeta(file) }
-
-                val isDragging = draggingIndex == idx
-                val elevation = if (isDragging) 20.dp else 2.dp
-
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .pointerInput(items, idx) {
-                            detectDragGesturesAfterLongPress(
-                                onDragStart = {
-                                    draggingIndex = idx
-                                    dragOffset = 0f
-                                },
-                                onDragEnd = {
-                                    draggingIndex = null
-                                    dragOffset = 0f
-                                },
-                                onDragCancel = {
-                                    draggingIndex = null
-                                    dragOffset = 0f
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    dragOffset += dragAmount.y
-                                    val from = draggingIndex ?: return@detectDragGesturesAfterLongPress
-                                    // Heuristic: swap when dragged beyond ~half item height
-                                    val threshold = 80f
-                                    if (dragOffset > threshold && from < items.lastIndex) {
-                                        store.reorder(name, from, from + 1)
-                                        refresh()
-                                        draggingIndex = from + 1
-                                        dragOffset = 0f
-                                    } else if (dragOffset < -threshold && from > 0) {
-                                        store.reorder(name, from, from - 1)
-                                        refresh()
-                                        draggingIndex = from - 1
-                                        dragOffset = 0f
-                                    }
-                                }
-                            )
+        if (items.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Playlist vazia", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            LazyColumn(Modifier.weight(1f)) {
+                itemsIndexed(items) { index, item ->
+                    TrackItemRow(
+                        item = item,
+                        onClick = {
+                            PlayerManager.setQueueAndPlay(context, items, index)
                         },
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = elevation),
-                    onClick = {
-                        val mediaItems = items.map { ti ->
-                            val f = ti.file
-                            val mk = f.absolutePath
-                            val m = metaCache[mk]
-                            val md = MediaMetadata.Builder()
-                                .setTitle(m?.title ?: ti.entry.displayName)
-                                .setArtist(m?.artist)
-                                .build()
-                            MediaItem.Builder()
-                                .setUri(f.toURI().toString())
-                                .setMediaMetadata(md)
-                                .build()
-                        }
-                        PlayerManager.setQueueAndPlay(context, mediaItems, startIndex = idx)
-                    }
-                ) {
-                    Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Row(Modifier.weight(1f)) {
-                            // Cover
-                            val coverPath = meta?.coverPath
-                            if (coverPath != null) {
-                                val bmp = remember(coverPath) {
-                                    runCatching { BitmapFactory.decodeFile(coverPath) }.getOrNull()
-                                }
-                                if (bmp != null) {
-                                    Image(
-                                        bitmap = bmp.asImageBitmap(),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(54.dp)
-                                    )
-                                    Spacer(Modifier.width(12.dp))
-                                }
-                            } else {
-                                Box(
-                                    Modifier.size(54.dp).background(Color(0xFFEAEAEA))
-                                )
-                                Spacer(Modifier.width(12.dp))
-                            }
-
-                            Column {
-                                Text(entry.displayName, style = MaterialTheme.typography.titleSmall, maxLines = 1)
-                                val subtitle = listOfNotNull(meta?.artist, meta?.title).filter { it.isNotBlank() }
-                                if (subtitle.isNotEmpty()) {
-                                    Text(subtitle.joinToString(" • "), style = MaterialTheme.typography.bodySmall, maxLines = 1)
-                                } else {
-                                    Text("Toque para tocar", style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
-                        }
-                        Row {
-                            IconButton(onClick = { editDisplayFor = entry.fileName to entry.displayName }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Editar nome")
-                            }
-                            IconButton(onClick = { deleteTrackFor = entry.fileName }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Remover")
-                            }
-                        }
-                    }
+                        onEdit = { editDisplayFor = item.mediaId },
+                        onDelete = { deleteTrackFor = item.mediaId }
+                    )
                 }
             }
         }
     }
 
-    if (showRename) {
-        AlertDialog(
-            onDismissRequest = { showRename = false },
-            title = { Text("Renomear playlist") },
-            text = {
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    label = { Text("Novo nome") },
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val renamed = store.renamePlaylist(name, newName)
-                    name = renamed
-                    showRename = false
-                    refresh()
-                }) { Text("Salvar") }
-            },
-            dismissButton = { TextButton(onClick = { showRename = false }) { Text("Cancelar") } }
-        )
-    }
+    // --- DIÁLOGOS (Todos atualizados para Material 3) ---
 
-    if (showDelete) {
+    if (showRenamePlaylist) {
+        var newName by remember { mutableStateOf(name) }
         AlertDialog(
-            onDismissRequest = { showDelete = false },
-            title = { Text("Apagar playlist?") },
-            text = { Text("Isso remove a pasta e todas as músicas copiadas para ela.") },
+            onDismissRequest = { showRenamePlaylist = false },
+            title = { Text("Renomear Playlist") },
+            text = {
+                OutlinedTextField(value = newName, onValueChange = { newName = it }, label = { Text("Novo nome") })
+            },
             confirmButton = {
                 TextButton(onClick = {
-                    store.deletePlaylist(name)
-                    showDelete = false
-                    onBack()
-                }) { Text("Apagar") }
+                    if (store.renamePlaylist(name, newName)) {
+                        name = newName
+                    }
+                    showRenamePlaylist = false
+                }) { Text("Confirmar") }
             },
-            dismissButton = { TextButton(onClick = { showDelete = false }) { Text("Cancelar") } }
+            dismissButton = {
+                TextButton(onClick = { showRenamePlaylist = false }) { Text("Cancelar") }
+            }
         )
     }
 
     if (editDisplayFor != null) {
-        val (fileName, current) = editDisplayFor!!
+        val fileName = editDisplayFor!!
+        val current = items.find { it.mediaId == fileName }?.mediaMetadata?.displayTitle?.toString() ?: ""
         var value by remember { mutableStateOf(current) }
         AlertDialog(
             onDismissRequest = { editDisplayFor = null },
             title = { Text("Editar nome da faixa") },
             text = {
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = { value = it },
-                    label = { Text("Nome exibido") },
-                    singleLine = true
-                )
+                OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text("Nome exibido") })
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -281,7 +134,9 @@ fun PlaylistDetailScreen(
                     refresh()
                 }) { Text("Salvar") }
             },
-            dismissButton = { TextButton(onClick = { editDisplayFor = null }) { Text("Cancelar") } }
+            dismissButton = {
+                TextButton(onClick = { editDisplayFor = null }) { Text("Cancelar") }
+            }
         )
     }
 
@@ -290,7 +145,7 @@ fun PlaylistDetailScreen(
         AlertDialog(
             onDismissRequest = { deleteTrackFor = null },
             title = { Text("Remover música?") },
-            text = { Text("Removerá a música desta playlist (e apagará o arquivo copiado).") },
+            text = { Text("Isto removerá a música da playlist.") },
             confirmButton = {
                 TextButton(onClick = {
                     store.removeTrack(name, fileName, deleteFile = true)
@@ -298,7 +153,31 @@ fun PlaylistDetailScreen(
                     refresh()
                 }) { Text("Remover") }
             },
-            dismissButton = { TextButton(onClick = { deleteTrackFor = null }) { Text("Cancelar") } }
+            dismissButton = {
+                TextButton(onClick = { deleteTrackFor = null }) { Text("Cancelar") }
+            }
         )
+    }
+}
+
+@Composable
+fun TrackItemRow(
+    item: MediaItem,
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    ElevatedCard( // Componente Material 3
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(item.mediaMetadata.displayTitle?.toString() ?: "Desconhecido", style = MaterialTheme.typography.titleMedium)
+                Text(item.mediaMetadata.artist?.toString() ?: "Autor desconhecido", style = MaterialTheme.typography.bodySmall)
+            }
+            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = null) }
+            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = null) }
+        }
     }
 }
