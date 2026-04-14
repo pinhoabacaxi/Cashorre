@@ -1,131 +1,43 @@
 package com.rafa.musicas.ui
 
-import android.content.Intent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.*
+import androidx.compose.material.* // Para Scaffold, TopAppBar e Text (Material 2)
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.rafa.musicas.data.PlaylistStore
-import com.rafa.musicas.player.PlaybackService
-import kotlinx.coroutines.launch
 
-private object Routes {
-    const val PLAYLISTS = "playlists"
-    const val SEARCH = "search"
-    const val PLAYLIST_DETAIL = "playlist/{name}"
+@Composable
+fun AppRoot(store: PlaylistStore) {
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Playlists) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Cashorre Player") })
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            when (val s = currentScreen) {
+                is Screen.Playlists -> PlaylistsScreen(
+                    store = store, 
+                    onOpen = { currentScreen = Screen.Details(it) }
+                )
+                is Screen.Details -> PlaylistDetailScreen(
+                    playlistName = s.name, 
+                    store = store, 
+                    onBack = { currentScreen = Screen.Playlists }
+                )
+                is Screen.Import -> SearchAndImportScreen(store = store)
+            }
+        }
+        
+        // Se o seu player bar fica fixo embaixo, ele entra aqui:
+        PlayerMiniBar() 
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AppRoot() {
-    val nav = rememberNavController()
-    val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        context.startService(Intent(context, PlaybackService::class.java))
-    }
-
-    val store = remember { PlaylistStore(context) }
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Spacer(Modifier.height(12.dp))
-
-                Text(
-                    "Menu",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(16.dp)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("Músicas") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        nav.navigate(Routes.PLAYLISTS) { launchSingleTop = true }
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("Procurar músicas") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        nav.navigate(Routes.SEARCH) { launchSingleTop = true }
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Músicas") },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                    }
-                )
-            },
-            bottomBar = { PlayerMiniBar() }
-        ) { paddingValues ->
-            Box(Modifier.padding(paddingValues)) {
-                NavHost(
-                    navController = nav,
-                    startDestination = Routes.PLAYLISTS
-                ) {
-                    composable(Routes.PLAYLISTS) {
-                        PlaylistsScreen(
-                            store = store,
-                            onOpen = { name ->
-                                nav.navigate("playlist/$name")
-                            }
-                        )
-                    }
-
-                    composable(Routes.SEARCH) {
-                        SearchAndImportScreen(store = store)
-                    }
-
-                    composable(
-                        route = Routes.PLAYLIST_DETAIL,
-                        arguments = listOf(
-                            navArgument("name") {
-                                type = NavType.StringType
-                            }
-                        )
-                    ) { backStack ->
-                        val name = backStack.arguments?.getString("name") ?: return@composable
-
-                        PlaylistDetailScreen(
-                            playlistName = name,
-                            store = store,
-                            onBack = { nav.popBackStack() }
-                        )
-                    }
-                }
-            }
-        }
-    }
+// Classe selada para controlar a navegação sem erros de digitação
+sealed class Screen {
+    object Playlists : Screen()
+    data class Details(val name: String) : Screen()
+    object Import : Screen()
 }
