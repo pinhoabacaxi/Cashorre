@@ -32,14 +32,17 @@ fun SearchAndImportScreen(store: PlaylistStore) {
     var isImporting by remember { mutableStateOf(false) }
 
     val pickFolder = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        if (uri != null) {
-            val flags = (Intent.FLAG_GRANT_READ_URI_PERMISSION 
-                    or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-            
-            context.contentResolver.takePersistableUriPermission(uri, flags)
-
+    contract = ActivityResultContracts.OpenDocumentTree()
+) { uri ->
+    if (uri != null) {
+        // CORREÇÃO: Remova a flag FLAG_GRANT_PERSISTABLE_URI_PERMISSION daqui
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION 
+        
+        context.contentResolver.takePersistableUriPermission(uri, flags)
+        
+        // ... restante do código (scope.launch, etc)
+    }
+}
             // Iniciando a importação em segundo plano
             scope.launch {
                 isImporting = true
