@@ -1,6 +1,7 @@
 package com.rafa.musicas.ui
 
 import android.net.Uri
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -9,8 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 import com.rafa.musicas.data.PlaylistStore
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchAndImportScreen(store: PlaylistStore) {
     val context = LocalContext.current
@@ -26,23 +29,38 @@ fun SearchAndImportScreen(store: PlaylistStore) {
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
         if (uri != null) {
-            val flags = (android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    or android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-            runCatching { context.contentResolver.takePersistableUriPermission(uri, flags) }
+            val flags = (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(uri, flags)
+            }
+
             selectedTree = uri
             status = "Pasta selecionada. Agora escolha/crie a playlist e toque em Importar."
         }
     }
 
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Text("Procurar músicas", style = MaterialTheme.typography.titleLarge)
 
         ElevatedCard {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 Text(status)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = { pickFolder.launch(null) }) { Text("Selecionar pasta") }
+                    Button(onClick = { pickFolder.launch(null) }) {
+                        Text("Selecionar pasta")
+                    }
+
                     OutlinedButton(
                         enabled = selectedTree != null,
                         onClick = {
@@ -51,17 +69,29 @@ fun SearchAndImportScreen(store: PlaylistStore) {
                             } else {
                                 selectedPlaylist ?: store.createPlaylist("Playlist")
                             }
-                            val copied = store.addTracksFromTree(selectedTree!!, pl, recursive = recursive)
+
+                            val copied = store.addTracksFromTree(
+                                selectedTree!!,
+                                pl,
+                                recursive = recursive
+                            )
+
                             playlists = store.listPlaylists()
                             selectedPlaylist = pl
                             newPlaylistName = ""
-                            status = "Importadas $copied músicas para "$pl"."
+
+                            status = "Importadas $copied músicas para $pl."
                         }
-                    ) { Text("Importar") }
+                    ) {
+                        Text("Importar")
+                    }
                 }
 
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Checkbox(checked = recursive, onCheckedChange = { recursive = it })
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = recursive,
+                        onCheckedChange = { recursive = it }
+                    )
                     Spacer(Modifier.width(6.dp))
                     Text("Incluir subpastas (recursivo)")
                 }
@@ -69,14 +99,24 @@ fun SearchAndImportScreen(store: PlaylistStore) {
         }
 
         ElevatedCard {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Escolher playlist destino", style = MaterialTheme.typography.titleMedium)
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "Escolher playlist destino",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 if (playlists.isEmpty()) {
                     Text("Nenhuma playlist ainda. Crie uma abaixo.")
                 } else {
                     var expanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
                         OutlinedTextField(
                             value = selectedPlaylist ?: "",
                             onValueChange = {},
@@ -84,7 +124,11 @@ fun SearchAndImportScreen(store: PlaylistStore) {
                             label = { Text("Playlist existente") },
                             modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
-                        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
                             playlists.forEach { pl ->
                                 DropdownMenuItem(
                                     text = { Text(pl) },
