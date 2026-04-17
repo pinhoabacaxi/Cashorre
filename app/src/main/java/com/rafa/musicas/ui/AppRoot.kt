@@ -22,7 +22,7 @@ import com.rafa.musicas.player.PlaybackService
 @OptIn(UnstableApi::class) // ESTA LINHA CORRIGE O ERRO DO LINT
 @ExperimentalMaterial3Api
 @Composable
-fun AppRoot( store ) {
+fun AppRoot() {
     val nav = rememberNavController()
     val context = LocalContext.current
 
