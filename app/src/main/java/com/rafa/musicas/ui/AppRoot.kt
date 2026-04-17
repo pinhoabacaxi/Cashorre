@@ -31,6 +31,6 @@ fun AppRoot(store = store) {
         context.startService(Intent(context, PlaybackService::class.java))
     }
 
-    val store = remember { PlaylistStore(context) }
+    val store = remember {PlaylistStore(context)}}
     // ... resto do seu código (Drawer, Scaffold, NavHost)
     
