@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import com.rafa.musicas.data.PlaylistStore
 import com.rafa.musicas.ui.AppRoot
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
 
     private val requestNotifications = registerForActivityResult(
