@@ -13,6 +13,10 @@ class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
 
     override fun onCreate() {
+        startForeground(
+    1,
+    NotificationHelper.createNotification(this)
+)
         super.onCreate()
 
         val player = PlayerManager.get(this)
