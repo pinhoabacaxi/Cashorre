@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
                 
                 // Inicializa o store e passa para o AppRoot
                 val store = remember { PlaylistStore(this) }
-                fun AppRoot(store: PlaylistStore)
+AppRoot(store)
             }
         }
     }
