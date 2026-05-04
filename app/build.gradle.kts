@@ -32,25 +32,16 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
     kotlinOptions {
-        jvmTarget = "17"
-        // Libera o uso de APIs instáveis da Media3 globalmente no projeto
-        freeCompilerArgs += listOf("-opt-in=androidx.media3.common.util.UnstableApi")
-    }
+    jvmTarget = "17"
+    freeCompilerArgs += listOf("-opt-in=androidx.media3.common.util.UnstableApi")
+}
+
 
     buildFeatures {
         compose = true
     }
-
-    composeOptions {
-        // Versão atualizada para compatibilidade com o Kotlin 1.9.x
-        kotlinCompilerExtensionVersion = "1.5.14" 
-    }
+ 
 
     packaging {
         resources {
