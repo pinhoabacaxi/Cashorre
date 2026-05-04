@@ -16,7 +16,12 @@ import com.rafa.musicas.player.PlayerManager
 fun PlayerMiniBar() {
     val context = LocalContext.current
     val player = remember { PlayerManager.get(context) }
-    var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    LaunchedEffect(Unit) {
+    while (true) {
+        isPlaying = player.isPlaying
+        delay(500)
+    }
+}
     var title by remember { mutableStateOf("Nada tocando") }
     var volume by remember { mutableStateOf(PlayerManager.getAppVolume()) }
 
