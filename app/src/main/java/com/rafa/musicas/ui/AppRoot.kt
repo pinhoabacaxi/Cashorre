@@ -28,9 +28,10 @@ fun AppRoot() {
 
     // O Lint falhava aqui porque o PlaybackService (Media3) é considerado UnstableApi
     LaunchedEffect(Unit) {
-        context.startService(Intent(context, PlaybackService::class.java))
-    }
+    val intent = Intent(context, PlaybackService::class.java)
+    context.startForegroundService(intent)
+}
 
-    val store = remember {PlaylistStore(context)}}
+    val store = remember {PlaylistStore(context)}
     // ... resto do seu código (Drawer, Scaffold, NavHost)
     
