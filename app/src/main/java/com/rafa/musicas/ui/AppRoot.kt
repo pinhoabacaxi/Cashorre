@@ -42,9 +42,16 @@ fun AppRoot(store: PlaylistStore) {
             modifier = Modifier.padding(padding)
         ) {
             composable("playlists") {
-                PlaylistsScreen(store) { playlist ->
+                PlaylistsScreen(
+                store = store,
+                onOpen = { playlist ->
                     nav.navigate("playlist/$playlist")
+                },
+                onImport = {
+                    nav.navigate("search")
                 }
+            )
+        }
             }
 
             composable("search") {
