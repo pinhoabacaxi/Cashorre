@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.rafa.musicas.data.PlaylistStore
 
 @Composable
-fun PlaylistsScreen(store: PlaylistStore, onOpen: (String) -> Unit) {
+fun PlaylistsScreen(store: PlaylistStore, onOpen: (String) -> Unit, onImport: () -> Unit ) {
     var playlists by remember { mutableStateOf(store.listPlaylists()) }
     var showCreate by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf("") }
@@ -71,6 +71,9 @@ fun PlaylistsScreen(store: PlaylistStore, onOpen: (String) -> Unit) {
                 }) { Text("Criar") }
             },
             dismissButton = { TextButton(onClick = { showCreate = false }) { Text("Cancelar") } }
+            Button(onClick = onImport) {
+            Text("Importar músicas")
+            }
         )
     }
 }
