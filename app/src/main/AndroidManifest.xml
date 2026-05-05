@@ -9,7 +9,7 @@
         android:allowBackup="true"
         android:label="Pinhoabacaxi Músicas"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+        android:theme="@style/Theme.Musicas" 
 
         <service
             android:name=".player.PlaybackService"
