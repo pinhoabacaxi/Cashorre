@@ -41,14 +41,14 @@ fun AppRoot(store: PlaylistStore) {
 
             composable("playlists") {
                 PlaylistsScreen(
-                    store = store,
-                    onOpen = { playlist ->
-                        nav.navigate("playlist/$playlist")
-                    },
-                    onImport = {
-                        nav.navigate("search")
-                    }
-                )
+                store = store,
+                  onOpen = { playlist ->
+                    nav.navigate("playlist/$playlist")
+                },
+                onImport = {
+                    nav.navigate("search")
+                }
+            )
             }
 
             composable("search") {
