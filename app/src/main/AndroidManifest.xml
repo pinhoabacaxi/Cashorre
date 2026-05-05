@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.rafa.musicas">
+
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
@@ -7,16 +9,12 @@
         android:allowBackup="true"
         android:label="Pinhoabacaxi Músicas"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Material3.DayNight.NoActionBar"
+        android:theme="@style/Theme.Material3.DayNight.NoActionBar">
 
         <service
             android:name=".player.PlaybackService"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback">
-            <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService" />
-            </intent-filter>
-        </service>
+            android:foregroundServiceType="mediaPlayback" />
 
         <activity
             android:name=".MainActivity"
@@ -28,4 +26,5 @@
         </activity>
 
     </application>
+
 </manifest>
