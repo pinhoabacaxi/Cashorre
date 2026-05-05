@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -9,12 +8,7 @@
         android:allowBackup="true"
         android:label="Pinhoabacaxi Músicas"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Musicas" 
-
-        <service
-            android:name=".player.PlaybackService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
+        android:theme="@style/Theme.Musicas">
 
         <activity
             android:name=".MainActivity"
@@ -24,6 +18,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".player.PlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
     </application>
 
