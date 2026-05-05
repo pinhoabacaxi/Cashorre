@@ -205,7 +205,13 @@ class PlaylistStore(private val context: Context) {
 
     private fun isAudio(n: String): Boolean {
         val lower = n.lowercase()
-        return lower.endsWith(".mp3") || lower.endsWith(".m4a") || lower.endsWith(".wav")
+        return lower.endsWith(".mp3") ||
+       lower.endsWith(".m4a") ||
+       lower.endsWith(".wav") ||
+       lower.endsWith(".flac") ||
+       lower.endsWith(".ogg") ||
+       lower.endsWith(".opus") ||
+       lower.endsWith(".aac")
     }
 
     private fun sanitizeName(name: String): String {
