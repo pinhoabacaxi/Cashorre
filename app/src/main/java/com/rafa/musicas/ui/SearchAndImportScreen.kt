@@ -52,10 +52,10 @@ fun SearchAndImportScreen(store: PlaylistStore) {
                 
                 try {
                     val targetPlaylist = if (newPlaylistName.isNotBlank()) {
-                        store.createPlaylist(newPlaylistName)
+                    store.createPlaylist(newPlaylistName)
                     } else {
-                        selectedPlaylist ?: "Playlist"
-                    }
+                    selectedPlaylist ?: store.createPlaylist("Playlist")
+                }
 
                     // CORREÇÃO DE TIPO E ORDEM: 
                     // store.addTracksFromTree(playlistName: String, treeUri: Uri, recursive: Boolean)
