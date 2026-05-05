@@ -32,11 +32,12 @@ android {
         }
     }
 
-    kotlinOptions {
-    jvmTarget = "17"
-    freeCompilerArgs += listOf("-opt-in=androidx.media3.common.util.UnstableApi")
+    kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.add("-opt-in=androidx.media3.common.util.UnstableApi")
+    }
 }
-
 
     buildFeatures {
         compose = true
