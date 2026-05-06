@@ -1,5 +1,7 @@
 package com.rafa.musicas.ui
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.media3.common.util.UnstableApi
 import android.content.Intent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
@@ -15,7 +17,8 @@ import androidx.navigation.navArgument
 import com.rafa.musicas.data.PlaylistStore
 import com.rafa.musicas.player.PlaybackService
 
-@OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
+@androidx.annotation.OptIn(UnstableApi::class)
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppRoot(store: PlaylistStore) {
 
