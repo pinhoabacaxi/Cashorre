@@ -34,9 +34,15 @@ fun AppRoot(store: PlaylistStore) {
         )
     }
 
-    Scaffold(
-        bottomBar = { PlayerMiniBar() }
-    ) { padding ->
+   Scaffold(
+    bottomBar = {
+        PlayerMiniBar(
+            onOpenPlayer = {
+                nav.navigate("player")
+            }
+        )
+    }
+) 
 
         NavHost(
             navController = nav,
@@ -45,6 +51,11 @@ fun AppRoot(store: PlaylistStore) {
         ) {
 
         
+            composable("player") {
+                FullPlayerScreen(
+                onBack = { nav.popBackStack() }
+                )
+            }
             composable("room_playlists") {
                 RoomPlaylistsScreen(
                     onOpenPlaylist = { playlist ->
@@ -115,4 +126,3 @@ fun AppRoot(store: PlaylistStore) {
             }
         }
     }
-}
