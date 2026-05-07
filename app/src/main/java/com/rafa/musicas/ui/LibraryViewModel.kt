@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.rafa.musicas.data.AlbumGroup
+import com.rafa.musicas.data.ArtistGroup
+import com.rafa.musicas.data.groupTracksByAlbum
+import com.rafa.musicas.data.groupTracksByArtist
 
 enum class LibraryFilter {
     ALL,
@@ -37,6 +41,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 LibraryFilter.FAVORITES -> tracks.filter { it.isFavorite }
                 LibraryFilter.RECENT -> tracks.filter { it.lastPlayedAt != null }
                     .sortedByDescending { it.lastPlayedAt }
+            
             }
 
             val normalizedQuery = q.trim().lowercase()
@@ -52,6 +57,39 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val artists: StateFlow<List<ArtistGroup>> =
+        combine(allTracks, query) { tracks, q ->
+            val filtered = if (q.isBlank()) {
+                tracks
+            } else {
+                tracks.filter {
+                    it.author.lowercase().contains(q.lowercase())
+                }
+            }
+
+            groupTracksByArtist(filtered)
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList()
+        )
+
+    val albums: StateFlow<List<AlbumGroup>> =
+        combine(allTracks, query) { tracks, q ->
+            val filtered = if (q.isBlank()) {
+            tracks
+          } else {
+                tracks.filter {
+                (it.album ?: "").lowercase().contains(q.lowercase())
+                }
+          }
+
+            groupTracksByAlbum(filtered)
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList()
+        )
     val favorites: StateFlow<List<MusicEntity>> =
         repository.observeFavorites()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
