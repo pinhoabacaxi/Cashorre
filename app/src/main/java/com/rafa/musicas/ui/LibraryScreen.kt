@@ -320,83 +320,94 @@ private fun LibraryTrackRow(
     onPlayNext: () -> Unit,
     onAddToQueue: () -> Unit
 ) {
-
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = onPlay
     ) {
-
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
-            IconButton(onClick = onPlay) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = "Tocar"
-                )
-            }
-
-            ArtworkBox(
-                artworkUri = track.artworkUri,
-                size = 48.dp
-            )
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
-                Text(
-                    text = track.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                ArtworkBox(
+                    artworkUri = track.artworkUri,
+                    size = 56.dp
                 )
 
-                Text(
-                    text = track.author,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
-                )
+                Spacer(Modifier.width(12.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = track.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = track.author,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (!track.album.isNullOrBlank()) {
+                        Text(
+                            text = track.album,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
-            IconButton(onClick = onFavorite) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onPlay) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Tocar")
+                }
 
-                Icon(
-                    imageVector = if (track.isFavorite) {
-                        Icons.Default.Favorite
-                    } else {
-                        Icons.Default.FavoriteBorder
-                    },
-                    contentDescription = "Favorito"
-                )
-            }
+                IconButton(onClick = onFavorite) {
+                    Icon(
+                        imageVector = if (track.isFavorite) {
+                            Icons.Default.Favorite
+                        } else {
+                            Icons.Default.FavoriteBorder
+                        },
+                        contentDescription = "Favorito"
+                    )
+                }
 
-            IconButton(onClick = onAddToPlaylist) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Playlist"
-                )
-            }
+                IconButton(onClick = onAddToPlaylist) {
+                    Icon(Icons.Default.Add, contentDescription = "Adicionar à playlist")
+                }
 
-            IconButton(onClick = onPlayNext) {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Tocar a seguir"
-                )
-            }
+                IconButton(onClick = onPlayNext) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Tocar a seguir"
+                    )
+                }
 
-            IconButton(onClick = onAddToQueue) {
-                Icon(
-                    Icons.AutoMirrored.Filled.QueueMusic,
-                    contentDescription = "Fila"
-                )
+                IconButton(onClick = onAddToQueue) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.QueueMusic,
+                        contentDescription = "Adicionar à fila"
+                    )
+                }
             }
         }
     }
