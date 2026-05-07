@@ -153,7 +153,7 @@ fun FullPlayerScreen(
                         onClick = onBack
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar"
                         )
                     }
@@ -165,7 +165,7 @@ fun FullPlayerScreen(
                         onClick = onOpenQueue
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.QueueMusic
+                            Icons.AutoMirrored.Filled.QueueMusic,
                             contentDescription = "Fila"
                         )
                     }
