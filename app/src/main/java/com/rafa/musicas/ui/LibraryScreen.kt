@@ -387,14 +387,14 @@ private fun LibraryTrackRow(
 
             IconButton(onClick = onPlayNext) {
                 Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "Tocar a seguir"
                 )
             }
 
             IconButton(onClick = onAddToQueue) {
                 Icon(
-                    Icons.AutoMirrored.Filled.QueueMusic
+                    Icons.AutoMirrored.Filled.QueueMusic,
                     contentDescription = "Fila"
                 )
             }
