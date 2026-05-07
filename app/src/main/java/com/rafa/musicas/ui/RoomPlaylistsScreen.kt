@@ -11,18 +11,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,96 +39,164 @@ fun RoomPlaylistsScreen(
     onOpenLibrary: () -> Unit,
     viewModel: LibraryViewModel = viewModel()
 ) {
-    var renameTarget by remember { mutableStateOf<String?>(null) }
-    var renameText by remember { mutableStateOf("") }
+
     val playlists by viewModel.playlists.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("Playlists", style = MaterialTheme.typography.titleLarge)
-                Text("${playlists.size} playlists", style = MaterialTheme.typography.bodySmall)
-            }
+    var showCreateDialog by remember {
+        mutableStateOf(false)
+    }
 
-            Button(onClick = {
-                renameTarget = playlist.name
-                renameText = playlist.name
-            }) {
-                Text("Renomear")
-            }
-            Button(onClick = onOpenLibrary) {
-                Icon(Icons.Default.LibraryMusic, contentDescription = null)
-                Text(" Biblioteca")
+    var playlistName by remember {
+        mutableStateOf("")
+    }
+
+    Scaffold(
+
+        floatingActionButton = {
+
+            FloatingActionButton(
+                onClick = {
+                    showCreateDialog = true
+                }
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Nova playlist"
+                )
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+    ) { padding ->
 
-        if (playlists.isEmpty()) {
-            Text("Nenhuma playlist Room criada ainda. Abra a Biblioteca e adicione músicas.")
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(playlists, key = { it.name }) { playlist ->
-                    ElevatedCard(
-                        onClick = { onOpenPlaylist(playlist.name) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Text(
+                    "Playlists",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Button(
+                    onClick = onOpenLibrary
+                ) {
+                    Text("Biblioteca")
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            if (playlists.isEmpty()) {
+
+                Text("Nenhuma playlist criada.")
+
+            } else {
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    items(playlists) { playlist ->
+
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                onOpenPlaylist(playlist.name)
+                            }
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(playlist.name, style = MaterialTheme.typography.titleMedium)
-                                Text("Abrir playlist", style = MaterialTheme.typography.bodySmall)
-                            }
 
-                            IconButton(onClick = { onOpenPlaylist(playlist.name) }) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Abrir")
-                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
 
-                            IconButton(onClick = { viewModel.deletePlaylist(playlist.name) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Excluir")
+                                Icon(
+                                    Icons.Default.Folder,
+                                    contentDescription = null
+                                )
+
+                                Spacer(Modifier.height(8.dp))
+
+                                Text(
+                                    playlist.name,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
                             }
                         }
                     }
                 }
-            if (renameTarget != null) {
-               AlertDialog(
-                    onDismissRequest = { renameTarget = null },
-                    title = { Text("Renomear playlist") },
-                    text = {
-                        OutlinedTextField(
-                            value = renameText,
-                            onValueChange = { renameText = it },
-                            singleLine = true
-                        )
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            viewModel.renamePlaylist(renameTarget!!, renameText)
-                            renameTarget = null
-                            renameText = ""
-                        }) {
-                           Text("Salvar")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { renameTarget = null }) {
-                        Text("Cancelar")
-                      }
-                  }
-              )
-            }
             }
         }
+    }
+
+    if (showCreateDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showCreateDialog = false
+            },
+
+            title = {
+                Text("Nova playlist")
+            },
+
+            text = {
+
+                OutlinedTextField(
+                    value = playlistName,
+
+                    onValueChange = {
+                        playlistName = it
+                    },
+
+                    label = {
+                        Text("Nome")
+                    },
+
+                    singleLine = true
+                )
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    onClick = {
+
+                        if (playlistName.isNotBlank()) {
+
+                            viewModel.createPlaylist(
+                                playlistName
+                            )
+                        }
+
+                        playlistName = ""
+                        showCreateDialog = false
+                    }
+                ) {
+                    Text("Criar")
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+                        showCreateDialog = false
+                    }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
