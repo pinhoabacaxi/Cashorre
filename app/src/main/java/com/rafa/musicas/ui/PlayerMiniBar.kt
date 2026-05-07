@@ -40,13 +40,17 @@ fun PlayerMiniBar(
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
     var title by remember { mutableStateOf("Nada tocando") }
     var artist by remember { mutableStateOf("Desconhecido") }
+    var artworkUri by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         while (true) {
             isPlaying = player.isPlaying
+
             val metadata = player.currentMediaItem?.mediaMetadata
             title = metadata?.displayTitle?.toString() ?: "Nada tocando"
             artist = metadata?.artist?.toString() ?: "Desconhecido"
+            artworkUri = metadata?.artworkUri?.toString()
+
             delay(500)
         }
     }
@@ -63,12 +67,22 @@ fun PlayerMiniBar(
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            ArtworkBox(
+                artworkUri = artworkUri,
+                size = 44.dp
+            )
+
+            Spacer(Modifier.width(10.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelLarge,
                     maxLines = 1
                 )
+
                 Text(
                     text = artist,
                     style = MaterialTheme.typography.bodySmall,
@@ -81,10 +95,14 @@ fun PlayerMiniBar(
             }
 
             IconButton(onClick = {
-                if (isPlaying) player.pause() else player.play()
+                if (isPlaying) {
+                    player.pause()
+                } else {
+                    player.play()
+                }
             }) {
                 Icon(
-                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = "Play/Pause"
                 )
             }
