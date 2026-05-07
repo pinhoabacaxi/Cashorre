@@ -109,7 +109,14 @@ fun AppRoot(store: PlaylistStore) {
             modifier = Modifier.padding(padding)
         ) {
             composable("library") {
-                LibraryScreen()
+                LibraryScreen(
+                    onOpenArtists = {
+                        nav.navigate("artists")
+                    },
+                    onOpenAlbums = {
+                        nav.navigate("albums")
+                    }
+                )
             }
 
             composable("room_playlists") {
