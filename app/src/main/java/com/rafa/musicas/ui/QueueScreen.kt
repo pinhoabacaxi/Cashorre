@@ -8,9 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons*
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -45,8 +46,13 @@ fun QueueScreen(
     val context = LocalContext.current
     val player = remember { PlayerManager.get(context) }
 
-    var queue by remember { mutableStateOf(PlayerManager.getQueue(context)) }
-    var currentIndex by remember { mutableStateOf(player.currentMediaItemIndex) }
+    var queue by remember {
+        mutableStateOf(PlayerManager.getQueue(context))
+    }
+
+    var currentIndex by remember {
+        mutableStateOf(player.currentMediaItemIndex)
+    }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -59,21 +65,29 @@ fun QueueScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Fila") },
+                title = {
+                    Text("Fila")
+                },
+
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icons(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
                     }
                 }
             )
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+
             Text(
                 text = "${queue.size} músicas na fila",
                 style = MaterialTheme.typography.bodyMedium
@@ -82,27 +96,48 @@ fun QueueScreen(
             Spacer(Modifier.height(12.dp))
 
             if (queue.isEmpty()) {
+
                 Text("A fila está vazia.")
+
             } else {
+
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+
                     itemsIndexed(queue) { index, item ->
+
                         QueueRow(
                             item = item,
+
                             isCurrent = index == currentIndex,
+
                             onPlay = {
                                 player.seekTo(index, 0L)
                                 player.playWhenReady = true
                             },
+
                             onMoveUp = {
-                                PlayerManager.moveQueueItem(context, index, index - 1)
+                                PlayerManager.moveQueueItem(
+                                    context,
+                                    index,
+                                    index - 1
+                                )
                             },
+
                             onMoveDown = {
-                                PlayerManager.moveQueueItem(context, index, index + 1)
+                                PlayerManager.moveQueueItem(
+                                    context,
+                                    index,
+                                    index + 1
+                                )
                             },
+
                             onRemove = {
-                                PlayerManager.removeFromQueue(context, index)
+                                PlayerManager.removeFromQueue(
+                                    context,
+                                    index
+                                )
                             }
                         )
                     }
@@ -121,37 +156,60 @@ private fun QueueRow(
     onMoveDown: () -> Unit,
     onRemove: () -> Unit
 ) {
+
     val metadata = item.mediaMetadata
-    val title = metadata.displayTitle?.toString() ?: "Sem título"
-    val artist = metadata.artist?.toString() ?: "Desconhecido"
+
+    val title =
+        metadata.displayTitle?.toString()
+            ?: "Sem título"
+
+    val artist =
+        metadata.artist?.toString()
+            ?: "Desconhecido"
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = onPlay
     ) {
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            IconButton(onClick = onPlay) {
+
+            IconButton(
+                onClick = onPlay
+            ) {
                 Icon(
                     Icons.Default.PlayArrow,
                     contentDescription = "Tocar",
-                    tint = if (isCurrent) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
+
+                    tint =
+                        if (isCurrent) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                 )
             }
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
                 Text(
-                    text = if (isCurrent) "▶ $title" else title,
+                    text =
+                        if (isCurrent) {
+                            "▶ $title"
+                        } else {
+                            title
+                        },
+
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1
+                    maxLines = 2
                 )
+
                 Text(
                     text = artist,
                     style = MaterialTheme.typography.bodySmall,
@@ -159,16 +217,31 @@ private fun QueueRow(
                 )
             }
 
-            IconButton(onClick = onMoveUp) {
-                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Subir")
+            IconButton(
+                onClick = onMoveUp
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowUp,
+                    contentDescription = "Subir"
+                )
             }
 
-            IconButton(onClick = onMoveDown) {
-                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Descer")
+            IconButton(
+                onClick = onMoveDown
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Descer"
+                )
             }
 
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Delete, contentDescription = "Remover")
+            IconButton(
+                onClick = onRemove
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Remover"
+                )
             }
         }
     }
