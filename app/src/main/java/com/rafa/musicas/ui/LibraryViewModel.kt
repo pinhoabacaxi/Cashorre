@@ -60,4 +60,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             repository.addTrackToPlaylist(playlistName, track)
         }
     }
+    fun deletePlaylist(name: String) {
+    viewModelScope.launch {
+        repository.deletePlaylist(name)
+    }
+}
 }
