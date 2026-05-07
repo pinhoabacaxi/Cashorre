@@ -12,12 +12,11 @@ import androidx.compose.runtime.remember
 import com.rafa.musicas.data.PlaylistStore
 import com.rafa.musicas.ui.AppRoot
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
 
-    private val requestNotifications = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* no-op */ }
+    private val requestPermissions = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,14 +24,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 LaunchedEffect(Unit) {
-                    if (Build.VERSION.SDK_INT >= 33) {
-                        requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    val permissions = buildList {
+                        if (Build.VERSION.SDK_INT >= 33) {
+                            add(Manifest.permission.READ_MEDIA_AUDIO)
+                            add(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        }
                     }
+
+                    requestPermissions.launch(permissions.toTypedArray())
                 }
-                
-                // Inicializa o store e passa para o AppRoot
+
                 val store = remember { PlaylistStore(this) }
-AppRoot(store)
+                AppRoot(store)
             }
         }
     }
