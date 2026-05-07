@@ -117,8 +117,25 @@ fun LibraryScreen(
                 selected = selectedFilter == LibraryFilter.RECENT,
                 onClick = { viewModel.setFilter(LibraryFilter.RECENT) }
             )
-        }
+            Spacer(Modifier.height(8.dp))
 
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = {
+        // navegar artistas
+                }) {
+                    Text("Artistas")
+                }
+
+                Button(onClick = {
+        // navegar álbuns
+                }) {
+                    Text("Álbuns")
+                }
+            }
+        }
+   
         Spacer(Modifier.height(12.dp))
 
         if (tracks.isEmpty()) {
