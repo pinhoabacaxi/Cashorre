@@ -50,8 +50,10 @@ import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun LibraryScreen(
+    onOpenArtists: () -> Unit = {},
+    onOpenAlbums: () -> Unit = {},
     viewModel: LibraryViewModel = viewModel()
-) {
+)
     val context = LocalContext.current
 
     val tracks by viewModel.tracks.collectAsState()
@@ -151,6 +153,25 @@ fun LibraryScreen(
                     viewModel.setFilter(LibraryFilter.RECENT)
                 }
             )
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = onOpenArtists,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Artistas")
+            }
+
+            Button(
+                onClick = onOpenAlbums,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Álbuns")
+            }
         }
 
         Spacer(Modifier.height(12.dp))
