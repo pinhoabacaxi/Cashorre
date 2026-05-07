@@ -44,6 +44,8 @@ import com.rafa.musicas.data.db.MusicEntity
 import com.rafa.musicas.data.db.PlaylistEntity
 import com.rafa.musicas.data.toMediaItem
 import com.rafa.musicas.player.PlayerManager
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.QueueMusic
 
 @Composable
 fun LibraryScreen(
@@ -240,6 +242,8 @@ private fun LibraryTrackRow(
     onPlay: () -> Unit,
     onFavorite: () -> Unit,
     onAddToPlaylist: () -> Unit
+    onPlayNext: () -> Unit,
+    onAddToQueue: () -> Unit
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -289,6 +293,13 @@ private fun LibraryTrackRow(
             IconButton(onClick = onAddToPlaylist) {
                 Icon(Icons.Default.Add, contentDescription = "Adicionar à playlist")
             }
+            IconButton(onClick = onPlayNext) {
+                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Tocar a seguir")
+            }
+
+            IconButton(onClick = onAddToQueue) {
+                Icon(Icons.Default.QueueMusic, contentDescription = "Adicionar à fila")
+            }
         }
     }
 }
@@ -335,5 +346,11 @@ private fun AddToPlaylistDialog(
                 Text("Fechar")
             }
         }
+        onPlayNext = {
+            PlayerManager.playNext(context, track.toMediaItem())
+    },
+        onAddToQueue = {
+            PlayerManager.addToQueueEnd(context, track.toMediaItem())
+    }
     )
 }
