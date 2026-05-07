@@ -15,11 +15,13 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +43,7 @@ fun PlayerMiniBar(
     var title by remember { mutableStateOf("Nada tocando") }
     var artist by remember { mutableStateOf("Desconhecido") }
     var artworkUri by remember { mutableStateOf<String?>(null) }
+    var volume by remember { mutableFloatStateOf(PlayerManager.getAppVolume()) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -50,67 +53,75 @@ fun PlayerMiniBar(
             title = metadata?.displayTitle?.toString() ?: "Nada tocando"
             artist = metadata?.artist?.toString() ?: "Desconhecido"
             artworkUri = metadata?.artworkUri?.toString()
-            PlayerManager.saveQueue(context)
 
-            delay(2000)
+            delay(1000)
         }
     }
 
     Surface(
         tonalElevation = 8.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onOpenPlayer() }
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(8.dp)
         ) {
-            ArtworkBox(
-                artworkUri = artworkUri,
-                size = 44.dp
-            )
-
-            Spacer(Modifier.width(10.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenPlayer() },
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1
+                ArtworkBox(
+                    artworkUri = artworkUri,
+                    size = 48.dp
                 )
 
-                Text(
-                    text = artist,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1
-                )
-            }
+                Spacer(Modifier.width(10.dp))
 
-            IconButton(onClick = { player.seekToPrevious() }) {
-                Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior")
-            }
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2
+                    )
 
-            IconButton(onClick = {
-                if (isPlaying) {
-                    player.pause()
-                } else {
-                    player.play()
+                    Text(
+                        text = artist,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
+                    )
                 }
-            }) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = "Play/Pause"
-                )
+
+                IconButton(onClick = { player.seekToPrevious() }) {
+                    Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior")
+                }
+
+                IconButton(
+                    onClick = {
+                        if (isPlaying) player.pause() else player.play()
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = "Play/Pause"
+                    )
+                }
+
+                IconButton(onClick = { player.seekToNext() }) {
+                    Icon(Icons.Default.SkipNext, contentDescription = "Próxima")
+                }
             }
 
-            IconButton(onClick = { player.seekToNext() }) {
-                Icon(Icons.Default.SkipNext, contentDescription = "Próxima")
-            }
+            Slider(
+                value = volume,
+                onValueChange = {
+                    volume = it
+                    PlayerManager.setAppVolume(context, it)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
