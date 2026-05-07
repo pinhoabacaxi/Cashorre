@@ -18,18 +18,10 @@ class MusicRepository(context: Context) {
     private val playlistDao = db.playlistDao()
     private val appContext = context.applicationContext
 
-    fun observeAllTracks(): Flow<List<MusicEntity>> =
-        musicDao.observeAllTracks()
-
-    fun observeFavorites(): Flow<List<MusicEntity>> =
-        musicDao.observeFavorites()
-
-    fun observeRecentlyPlayed(limit: Int = 100): Flow<List<MusicEntity>> =
-        musicDao.observeRecentlyPlayed(limit)
-
-    fun observePlaylists(): Flow<List<PlaylistEntity>> =
-        playlistDao.observePlaylists()
-
+    fun observeAllTracks(): Flow<List<MusicEntity>> = musicDao.observeAllTracks()
+    fun observeFavorites(): Flow<List<MusicEntity>> = musicDao.observeFavorites()
+    fun observeRecentlyPlayed(limit: Int = 100): Flow<List<MusicEntity>> = musicDao.observeRecentlyPlayed(limit)
+    fun observePlaylists(): Flow<List<PlaylistEntity>> = playlistDao.observePlaylists()
     fun observePlaylistTracks(playlistName: String): Flow<List<MusicEntity>> =
         playlistDao.observePlaylistTracks(playlistName)
 
@@ -64,35 +56,39 @@ class MusicRepository(context: Context) {
         playlistDao.renamePlaylist(oldName, sanitizeName(newName))
     }
 
-    suspend fun addTrackToPlaylist(playlistName: String, track: MusicEntity) = withContext(Dispatchers.IO) {
-        playlistDao.insertPlaylist(PlaylistEntity(name = playlistName))
+    suspend fun addTrackToPlaylist(
+        playlistName: String,
+        track: MusicEntity
+    ) = withContext(Dispatchers.IO) {
+        val safePlaylist = sanitizeName(playlistName)
+        playlistDao.insertPlaylist(PlaylistEntity(name = safePlaylist))
         musicDao.upsertTrack(track)
 
-        val position = playlistDao.countTracks(playlistName)
+        val position = playlistDao.countTracks(safePlaylist)
 
         playlistDao.insertPlaylistTrack(
             PlaylistTrackEntity(
-                playlistName = playlistName,
+                playlistName = safePlaylist,
                 trackUri = track.uri,
                 position = position
             )
         )
     }
 
-    suspend fun removeTrackFromPlaylist(playlistName: String, trackUri: String) =
-        withContext(Dispatchers.IO) {
-            playlistDao.removeTrackFromPlaylist(playlistName, trackUri)
-        }
+    suspend fun removeTrackFromPlaylist(
+        playlistName: String,
+        trackUri: String
+    ) = withContext(Dispatchers.IO) {
+        playlistDao.removeTrackFromPlaylist(playlistName, trackUri)
+    }
 
-    suspend fun setFavorite(uri: String, favorite: Boolean) =
-        withContext(Dispatchers.IO) {
-            musicDao.setFavorite(uri, favorite)
-        }
+    suspend fun setFavorite(uri: String, favorite: Boolean) = withContext(Dispatchers.IO) {
+        musicDao.setFavorite(uri, favorite)
+    }
 
-    suspend fun markPlayed(uri: String) =
-        withContext(Dispatchers.IO) {
-            musicDao.markPlayed(uri)
-        }
+    suspend fun markPlayed(uri: String) = withContext(Dispatchers.IO) {
+        musicDao.markPlayed(uri)
+    }
 
     private fun sanitizeName(name: String): String =
         name.trim()
