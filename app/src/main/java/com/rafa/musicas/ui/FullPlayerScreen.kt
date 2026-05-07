@@ -47,4 +47,172 @@ import kotlin.math.max
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FullPlayerScreen(
-    onBack: ()
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val player = remember { PlayerManager.get(context) }
+
+    var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    var title by remember { mutableStateOf("Nada tocando") }
+    var artist by remember { mutableStateOf("Desconhecido") }
+    var position by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
+    var isUserSeeking by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            isPlaying = player.isPlaying
+
+            val metadata = player.currentMediaItem?.mediaMetadata
+            title = metadata?.displayTitle?.toString() ?: "Nada tocando"
+            artist = metadata?.artist?.toString() ?: "Desconhecido"
+
+            position = player.currentPosition.coerceAtLeast(0L)
+            duration = if (player.duration > 0) player.duration else 0L
+
+            if (!isUserSeeking && duration > 0) {
+                sliderPosition = position.toFloat() / duration.toFloat()
+            }
+
+            delay(500)
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Reproduzindo") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                modifier = Modifier.size(260.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                tonalElevation = 8.dp,
+                shape = MaterialTheme.shapes.extraLarge
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text("♪", style = MaterialTheme.typography.displayLarge)
+                    Text("Capa do álbum", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                maxLines = 2
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = artist,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            Slider(
+                value = sliderPosition,
+                onValueChange = {
+                    isUserSeeking = true
+                    sliderPosition = it
+                },
+                onValueChangeFinished = {
+                    if (duration > 0) {
+                        player.seekTo((sliderPosition * duration).toLong())
+                    }
+                    isUserSeeking = false
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(formatDuration(position), style = MaterialTheme.typography.bodySmall)
+                Text(formatDuration(duration), style = MaterialTheme.typography.bodySmall)
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {
+                    player.shuffleModeEnabled = !player.shuffleModeEnabled
+                }) {
+                    Icon(Icons.Default.Shuffle, contentDescription = "Shuffle")
+                }
+
+                IconButton(onClick = { player.seekToPrevious() }) {
+                    Icon(
+                        Icons.Default.SkipPrevious,
+                        contentDescription = "Anterior",
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                IconButton(onClick = {
+                    if (isPlaying) player.pause() else player.play()
+                }) {
+                    Icon(
+                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = "Play/Pause",
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+
+                IconButton(onClick = { player.seekToNext() }) {
+                    Icon(
+                        Icons.Default.SkipNext,
+                        contentDescription = "Próxima",
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                IconButton(onClick = {
+                    player.repeatMode =
+                        if (player.repeatMode == Player.REPEAT_MODE_OFF)
+                            Player.REPEAT_MODE_ALL
+                        else
+                            Player.REPEAT_MODE_OFF
+                }) {
+                    Icon(Icons.Default.Repeat, contentDescription = "Repeat")
+                }
+            }
+        }
+    }
+}
+
+private fun formatDuration(ms: Long): String {
+    val totalSeconds = max(0, ms / 1000)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%d:%02d".format(minutes, seconds)
+}
