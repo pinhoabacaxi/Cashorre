@@ -355,7 +355,7 @@ private fun LibraryTrackRow(
                 Text(
                     text = track.displayName,
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
