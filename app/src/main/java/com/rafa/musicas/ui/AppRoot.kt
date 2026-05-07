@@ -45,6 +45,27 @@ fun AppRoot(store: PlaylistStore) {
         ) {
 
         
+            composable("room_playlists") {
+                RoomPlaylistsScreen(
+                    onOpenPlaylist = { playlist ->
+                        nav.navigate("room_playlist/$playlist")
+                    },
+                      onOpenLibrary = {
+                        nav.navigate("library")
+                    }
+               )
+            }
+
+            composable(
+                route = "room_playlist/{name}",
+                arguments = listOf(navArgument("name") { type = NavType.StringType })
+            ) { entry ->
+                 val name = entry.arguments?.getString("name").orEmpty()
+                 RoomPlaylistDetailScreen(
+                    playlistName = name,
+                    onBack = { nav.popBackStack() }
+                 )
+            }
             composable("library") {
                 LibraryScreen()
             }
