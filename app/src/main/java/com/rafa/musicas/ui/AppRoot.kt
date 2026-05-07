@@ -1,5 +1,6 @@
 package com.rafa.musicas.ui
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
@@ -34,36 +35,12 @@ private data class BottomDestination(
 )
 
 private val mainDestinations = listOf(
-    BottomDestination(
-        route = "library",
-        label = "Biblioteca",
-        icon = Icons.Default.LibraryMusic
-    ),
-    BottomDestination(
-        route = "room_playlists",
-        label = "Playlists",
-        icon = Icons.Default.PlaylistPlay
-    ),
-    BottomDestination(
-        route = "favorites",
-        label = "Favoritos",
-        icon = Icons.Default.Favorite
-    ),
-    BottomDestination(
-        route = "artists",
-        label = "Artistas",
-        icon = Icons.Default.Person
-    ),
-    BottomDestination(
-        route = "albums",
-        label = "Álbuns",
-        icon = Icons.Default.Album
-    ),
-    BottomDestination(
-        route = "settings",
-        label = "Config",
-        icon = Icons.Default.Settings
-    )
+    BottomDestination("library", "Biblioteca", Icons.Default.LibraryMusic),
+    BottomDestination("room_playlists", "Playlists", Icons.Default.PlaylistPlay),
+    BottomDestination("favorites", "Favoritos", Icons.Default.Favorite),
+    BottomDestination("artists", "Artistas", Icons.Default.Person),
+    BottomDestination("albums", "Álbuns", Icons.Default.Album),
+    BottomDestination("settings", "Config", Icons.Default.Settings)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,56 +51,60 @@ fun AppRoot(store: PlaylistStore) {
     val currentDestination = backStackEntry?.destination
     val currentRoute = currentDestination?.route
 
-    val showBottomNav = mainDestinations.any { destination ->
-        currentDestination?.hierarchy?.any { it.route == destination.route } == true
-    }
+    val hideBarsOnRoutes = setOf(
+        "player",
+        "queue"
+    )
+
+    val showBars = currentRoute !in hideBarsOnRoutes
 
     Scaffold(
         bottomBar = {
-            if (showBottomNav) {
-                NavigationBar {
-                    mainDestinations.forEach { destination ->
-                        val selected =
-                            currentDestination?.hierarchy?.any {
-                                it.route == destination.route
-                            } == true
+            if (showBars) {
+                Column {
+                    PlayerMiniBar(
+                        onOpenPlayer = {
+                            nav.navigate("player")
+                        }
+                    )
 
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                if (currentRoute != destination.route) {
-                                    nav.navigate(destination.route) {
-                                        popUpTo(nav.graph.startDestinationId) {
-                                            saveState = true
+                    NavigationBar {
+                        mainDestinations.forEach { destination ->
+                            val selected =
+                                currentDestination?.hierarchy?.any {
+                                    it.route == destination.route
+                                } == true
+
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = {
+                                    if (currentRoute != destination.route) {
+                                        nav.navigate(destination.route) {
+                                            popUpTo(nav.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = destination.icon,
+                                        contentDescription = destination.label
+                                    )
+                                },
+                                label = {
+                                    Text(destination.label)
                                 }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = destination.icon,
-                                    contentDescription = destination.label
-                                )
-                            },
-                            label = {
-                                Text(destination.label)
-                            }
-                        )
+                            )
+                        }
                     }
                 }
-            } else {
-                PlayerMiniBar(
-                    onOpenPlayer = {
-                        nav.navigate("player")
-                    }
-                )
             }
         }
     ) { padding ->
-
         NavHost(
             navController = nav,
             startDestination = "library",
@@ -179,7 +160,7 @@ fun AppRoot(store: PlaylistStore) {
             }
 
             composable("settings") {
-                LibraryScreen()
+                SettingsScreen()
             }
 
             composable("queue") {
@@ -201,7 +182,7 @@ fun AppRoot(store: PlaylistStore) {
                 )
             }
 
-            // Rotas antigas mantidas por segurança temporária.
+            // Rotas antigas mantidas temporariamente para compatibilidade.
             composable("playlists") {
                 PlaylistsScreen(
                     store = store,
