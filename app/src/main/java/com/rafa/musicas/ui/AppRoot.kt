@@ -44,8 +44,17 @@ fun AppRoot(store: PlaylistStore) {
             modifier = Modifier.padding(padding)
         ) {
 
+        
             composable("library") {
                 LibraryScreen()
+            }
+            
+            composable("favorites") {
+                FavoritesScreen()
+            }
+
+            composable("recent") {
+                RecentScreen()
             }
             
             composable("playlists") {
@@ -57,14 +66,17 @@ fun AppRoot(store: PlaylistStore) {
                 onImport = {
                     nav.navigate("library")
             }
-                }
+                
             )
             }
-
+            
             composable("search") {
                 SearchAndImportScreen(store)
             }
-
+            Button(onClick = { nav.navigate("library") }) { Text("Biblioteca") }
+            Button(onClick = { nav.navigate("favorites") }) { Text("Favoritos") }
+            Button(onClick = { nav.navigate("recent") }) { Text("Recentes") }
+            
             composable(
                 route = "playlist/{name}",
                 arguments = listOf(navArgument("name") {
