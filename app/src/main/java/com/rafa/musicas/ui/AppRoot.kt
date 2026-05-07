@@ -116,6 +116,11 @@ fun AppRoot(store: PlaylistStore) {
             Button(onClick = { nav.navigate("favorites") }) { Text("Favoritos") }
             Button(onClick = { nav.navigate("recent") }) { Text("Recentes") }
             
+            composable("queue") {
+                QueueScreen(
+                    onBack = { nav.popBackStack() }
+                 )
+            }
             composable(
                 route = "playlist/{name}",
                 arguments = listOf(navArgument("name") {
