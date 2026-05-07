@@ -50,8 +50,9 @@ fun PlayerMiniBar(
             title = metadata?.displayTitle?.toString() ?: "Nada tocando"
             artist = metadata?.artist?.toString() ?: "Desconhecido"
             artworkUri = metadata?.artworkUri?.toString()
+            PlayerManager.saveQueue(context)
 
-            delay(500)
+            delay(2000)
         }
     }
 
