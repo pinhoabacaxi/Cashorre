@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
@@ -153,7 +153,7 @@ fun FullPlayerScreen(
                         onClick = onBack
                     ) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack
                             contentDescription = "Voltar"
                         )
                     }
@@ -165,7 +165,7 @@ fun FullPlayerScreen(
                         onClick = onOpenQueue
                     ) {
                         Icon(
-                            Icons.Default.QueueMusic,
+                            Icons.AutoMirrored.Filled.QueueMusic
                             contentDescription = "Fila"
                         )
                     }
