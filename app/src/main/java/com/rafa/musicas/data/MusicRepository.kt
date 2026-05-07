@@ -1,6 +1,7 @@
 package com.rafa.musicas.data
 
 import android.content.Context
+import android.net.Uri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.rafa.musicas.data.db.MusicDatabase
@@ -18,10 +19,18 @@ class MusicRepository(context: Context) {
     private val playlistDao = db.playlistDao()
     private val appContext = context.applicationContext
 
-    fun observeAllTracks(): Flow<List<MusicEntity>> = musicDao.observeAllTracks()
-    fun observeFavorites(): Flow<List<MusicEntity>> = musicDao.observeFavorites()
-    fun observeRecentlyPlayed(limit: Int = 100): Flow<List<MusicEntity>> = musicDao.observeRecentlyPlayed(limit)
-    fun observePlaylists(): Flow<List<PlaylistEntity>> = playlistDao.observePlaylists()
+    fun observeAllTracks(): Flow<List<MusicEntity>> =
+        musicDao.observeAllTracks()
+
+    fun observeFavorites(): Flow<List<MusicEntity>> =
+        musicDao.observeFavorites()
+
+    fun observeRecentlyPlayed(limit: Int = 100): Flow<List<MusicEntity>> =
+        musicDao.observeRecentlyPlayed(limit)
+
+    fun observePlaylists(): Flow<List<PlaylistEntity>> =
+        playlistDao.observePlaylists()
+
     fun observePlaylistTracks(playlistName: String): Flow<List<MusicEntity>> =
         playlistDao.observePlaylistTracks(playlistName)
 
@@ -34,7 +43,9 @@ class MusicRepository(context: Context) {
                 fileName = it.fileName,
                 displayName = it.displayName,
                 author = it.author,
-                durationMs = it.durationMs
+                durationMs = it.durationMs,
+                album = it.album,
+                artworkUri = it.artworkUri
             )
         }
 
@@ -61,6 +72,7 @@ class MusicRepository(context: Context) {
         track: MusicEntity
     ) = withContext(Dispatchers.IO) {
         val safePlaylist = sanitizeName(playlistName)
+
         playlistDao.insertPlaylist(PlaylistEntity(name = safePlaylist))
         musicDao.upsertTrack(track)
 
@@ -82,12 +94,6 @@ class MusicRepository(context: Context) {
         playlistDao.removeTrackFromPlaylist(playlistName, trackUri)
     }
 
-    suspend fun setFavorite(uri: String, favorite: Boolean) = withContext(Dispatchers.IO) {
-        musicDao.setFavorite(uri, favorite)
-    }
-
-    suspend fun markPlayed(uri: String) = withContext(Dispatchers.IO) {
-        musicDao.markPlayed(uri)
     suspend fun moveTrackInPlaylist(
         playlistName: String,
         tracks: List<MusicEntity>,
@@ -104,23 +110,34 @@ class MusicRepository(context: Context) {
             playlistDao.updateTrackPosition(playlistName, track.uri, index)
         }
     }
-        }
 
-        private fun sanitizeName(name: String): String =
-            name.trim()
-                .replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
-                .ifEmpty { "Playlist" }
+    suspend fun setFavorite(uri: String, favorite: Boolean) = withContext(Dispatchers.IO) {
+        musicDao.setFavorite(uri, favorite)
     }
 
-    fun MusicEntity.toMediaItem(): MediaItem {
-        return MediaItem.Builder()
-            .setMediaId(uri)
-            .setUri(uri)
-            .setMediaMetadata(
-                 MediaMetadata.Builder()
-                    .setDisplayTitle(displayName)
-                    .setArtist(author)
-                    .build()
-            )
-             .build()
+    suspend fun markPlayed(uri: String) = withContext(Dispatchers.IO) {
+        musicDao.markPlayed(uri)
+    }
+
+    private fun sanitizeName(name: String): String =
+        name.trim()
+            .replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+            .ifEmpty { "Playlist" }
+}
+
+fun MusicEntity.toMediaItem(): MediaItem {
+    val metadataBuilder = MediaMetadata.Builder()
+        .setDisplayTitle(displayName)
+        .setArtist(author)
+        .setAlbumTitle(album)
+
+    if (!artworkUri.isNullOrBlank()) {
+        metadataBuilder.setArtworkUri(Uri.parse(artworkUri))
+    }
+
+    return MediaItem.Builder()
+        .setMediaId(uri)
+        .setUri(uri)
+        .setMediaMetadata(metadataBuilder.build())
+        .build()
 }
