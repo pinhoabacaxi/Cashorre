@@ -11,13 +11,13 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
-// --- MODELOS DE DADOS (Centralizados aqui para evitar Redeclaration) ---
-
 @Serializable
 data class TrackEntry(
     val fileName: String,
     val displayName: String,
-    val author: String = "Desconhecido"
+    val author: String = "Desconhecido",
+    val uri: String? = null,
+    val durationMs: Long? = null
 )
 
 @Serializable
@@ -29,26 +29,32 @@ data class TrackItem(
     val fileName: String,
     val displayName: String,
     val author: String,
-    val playlistName: String
+    val playlistName: String,
+    val uri: String?,
+    val durationMs: Long?
 ) {
     fun toMediaItem(): MediaItem {
+        val mediaUri = uri?.let(Uri::parse)
+
+        val metadata = MediaMetadata.Builder()
+            .setDisplayTitle(displayName)
+            .setArtist(author)
+            .build()
+
         return MediaItem.Builder()
-            .setMediaId(fileName)
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setDisplayTitle(displayName)
-                    .setArtist(author)
-                    .build()
-            )
+            .setMediaId(uri ?: fileName)
+            .setUri(mediaUri)
+            .setMediaMetadata(metadata)
             .build()
     }
 }
 
-// --- CLASSE PRINCIPAL ---
-
 class PlaylistStore(private val context: Context) {
 
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        prettyPrint = true
+    }
 
     private fun mediaRoot(): File {
         val root = File(context.filesDir, "midias")
@@ -74,11 +80,16 @@ class PlaylistStore(private val context: Context) {
     fun listTrackItems(playlistName: String): List<TrackItem> {
         val idx = readIndex(playlistName)
         return idx.tracks.map {
+            val localFile = File(File(mediaRoot(), playlistName), it.fileName)
+            val fallbackUri = if (localFile.exists()) Uri.fromFile(localFile).toString() else null
+
             TrackItem(
                 fileName = it.fileName,
                 displayName = it.displayName,
                 author = it.author,
-                playlistName = playlistName
+                playlistName = playlistName,
+                uri = it.uri ?: fallbackUri,
+                durationMs = it.durationMs
             )
         }
     }
@@ -87,14 +98,16 @@ class PlaylistStore(private val context: Context) {
         val oldFolder = File(mediaRoot(), oldName)
         val safe = sanitizeName(newName)
         val newFolder = File(mediaRoot(), safe)
+
         return if (oldFolder.exists() && oldFolder.isDirectory && !newFolder.exists()) {
             oldFolder.renameTo(newFolder)
-        } else false
+        } else {
+            false
+        }
     }
 
     fun deletePlaylist(name: String) {
-        val folder = File(mediaRoot(), name)
-        folder.deleteRecursively()
+        File(mediaRoot(), name).deleteRecursively()
     }
 
     fun updateDisplayName(playlistName: String, fileName: String, newDisplayName: String) {
@@ -116,41 +129,74 @@ class PlaylistStore(private val context: Context) {
         }
     }
 
-    /**
-     * Resolve o erro "Unresolved reference: addTracksFromTree" na SearchAndImportScreen
-     */
+    fun addTracksFromMediaStore(playlistName: String): Int {
+        val safePlaylist = createPlaylist(playlistName)
+        val scanned = MusicScanner.scanDeviceAudio(context)
+        val currentIdx = readIndex(safePlaylist)
+        val existingUris = currentIdx.tracks.mapNotNull { it.uri }.toSet()
+
+        val newTracks = scanned
+            .filter { it.uri !in existingUris }
+            .map {
+                TrackEntry(
+                    fileName = it.fileName,
+                    displayName = it.displayName,
+                    author = it.author,
+                    uri = it.uri,
+                    durationMs = it.durationMs
+                )
+            }
+
+        writeIndex(
+            safePlaylist,
+            currentIdx.copy(tracks = currentIdx.tracks + newTracks)
+        )
+
+        return newTracks.size
+    }
+
     fun addTracksFromTree(playlistName: String, treeUri: Uri, recursive: Boolean): Int {
-        val destFolder = File(mediaRoot(), playlistName)
+        val safePlaylist = createPlaylist(playlistName)
+        val destFolder = File(mediaRoot(), safePlaylist)
         destFolder.mkdirs()
 
         val rootDoc = DocumentFile.fromTreeUri(context, treeUri) ?: return 0
         val files = mutableListOf<DocumentFile>()
         gatherFiles(rootDoc, files, recursive)
 
-        var copied = 0
-        val currentIdx = readIndex(playlistName)
+        val currentIdx = readIndex(safePlaylist)
         val newTracks = currentIdx.tracks.toMutableList()
 
+        var copied = 0
+
         files.forEach { doc ->
-            if (isAudio(doc.name ?: "")) {
-                val name = doc.name ?: "track"
-                val destFile = uniqueFile(destFolder, name)
-                
-                try {
-                    context.contentResolver.openInputStream(doc.uri)?.use { input ->
-                        destFile.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
+            val name = doc.name ?: return@forEach
+            if (!isAudio(name)) return@forEach
+
+            val destFile = uniqueFile(destFolder, name)
+
+            try {
+                context.contentResolver.openInputStream(doc.uri)?.use { input ->
+                    destFile.outputStream().use { output ->
+                        input.copyTo(output)
                     }
-                    newTracks.add(TrackEntry(fileName = destFile.name, displayName = destFile.name))
-                    copied++
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
+
+                newTracks.add(
+                    TrackEntry(
+                        fileName = destFile.name,
+                        displayName = destFile.nameWithoutExtension,
+                        author = "Desconhecido",
+                        uri = Uri.fromFile(destFile).toString()
+                    )
+                )
+                copied++
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
 
-        writeIndex(playlistName, currentIdx.copy(tracks = newTracks))
+        writeIndex(safePlaylist, currentIdx.copy(tracks = newTracks))
         return copied
     }
 
@@ -166,12 +212,13 @@ class PlaylistStore(private val context: Context) {
 
     private fun readIndex(playlistName: String): PlaylistIndex {
         val file = File(File(mediaRoot(), playlistName), "order.json")
+
         return if (file.exists()) {
             try {
                 val content = file.readText()
-                if (content.isBlank()) PlaylistIndex() 
+                if (content.isBlank()) PlaylistIndex()
                 else json.decodeFromString<PlaylistIndex>(content)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 PlaylistIndex()
             }
         } else {
@@ -180,7 +227,10 @@ class PlaylistStore(private val context: Context) {
     }
 
     private fun writeIndex(playlistName: String, index: PlaylistIndex) {
-        val file = File(File(mediaRoot(), playlistName), "order.json")
+        val folder = File(mediaRoot(), playlistName)
+        if (!folder.exists()) folder.mkdirs()
+
+        val file = File(folder, "order.json")
         file.writeText(json.encodeToString(index))
     }
 
@@ -192,29 +242,33 @@ class PlaylistStore(private val context: Context) {
     private fun uniqueFile(folder: File, name: String): File {
         var file = File(folder, name)
         if (!file.exists()) return file
+
         val dot = name.lastIndexOf('.')
         val base = if (dot > 0) name.substring(0, dot) else name
         val ext = if (dot > 0) name.substring(dot) else ""
+
         var i = 1
         while (file.exists()) {
             file = File(folder, "${base}_$i$ext")
             i++
         }
+
         return file
     }
 
-    private fun isAudio(n: String): Boolean {
-        val lower = n.lowercase()
+    private fun isAudio(name: String): Boolean {
+        val lower = name.lowercase()
         return lower.endsWith(".mp3") ||
-       lower.endsWith(".m4a") ||
-       lower.endsWith(".wav") ||
-       lower.endsWith(".flac") ||
-       lower.endsWith(".ogg") ||
-       lower.endsWith(".opus") ||
-       lower.endsWith(".aac")
+            lower.endsWith(".m4a") ||
+            lower.endsWith(".wav") ||
+            lower.endsWith(".flac") ||
+            lower.endsWith(".ogg") ||
+            lower.endsWith(".opus") ||
+            lower.endsWith(".aac")
     }
 
-    private fun sanitizeName(name: String): String {
-        return name.trim().replace(Regex("[^a-zA-Z0-9_\\-]"), "_").ifEmpty { "Playlist" }
-    }
+    private fun sanitizeName(name: String): String =
+        name.trim()
+            .replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+            .ifEmpty { "Playlist" }
 }
