@@ -23,7 +23,6 @@ import com.rafa.musicas.player.PlaybackService
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppRoot(store: PlaylistStore) {
-
     val nav = rememberNavController()
     val context = LocalContext.current
 
@@ -34,61 +33,53 @@ fun AppRoot(store: PlaylistStore) {
         )
     }
 
-   Scaffold(
-    bottomBar = {
-        PlayerMiniBar(
-            onOpenPlayer = {
-                nav.navigate("player")
-            }
-        )
-    }
-) 
-
+    Scaffold(
+        bottomBar = {
+            PlayerMiniBar(
+                onOpenPlayer = {
+                    nav.navigate("player")
+                }
+            )
+        }
+    ) { padding ->
         NavHost(
             navController = nav,
-            startDestination = "room_playlists"
+            startDestination = "room_playlists",
             modifier = Modifier.padding(padding)
         ) {
-
-        
-            composable("player") {
-                FullPlayerScreen(
-                onBack = { nav.popBackStack() },
-                onOpenQueue = { nav.navigate("queue") }
-                )
-            }
             composable("room_playlists") {
                 RoomPlaylistsScreen(
                     onOpenPlaylist = { playlist ->
                         nav.navigate("room_playlist/$playlist")
                     },
-                      onOpenLibrary = {
+                    onOpenLibrary = {
                         nav.navigate("library")
                     }
-               )
+                )
             }
 
             composable(
                 route = "room_playlist/{name}",
-                arguments = listOf(navArgument("name") { type = NavType.StringType })
+                arguments = listOf(
+                    navArgument("name") {
+                        type = NavType.StringType
+                    }
+                )
             ) { entry ->
-                 val name = entry.arguments?.getString("name").orEmpty()
-                 RoomPlaylistDetailScreen(
+                val name = entry.arguments?.getString("name").orEmpty()
+
+                RoomPlaylistDetailScreen(
                     playlistName = name,
-                    onBack = { nav.popBackStack() }
-                 )
-            }
-            composable("artists") {
-                ArtistsScreen()
+                    onBack = {
+                        nav.popBackStack()
+                    }
+                )
             }
 
-            composable("albums") {
-                AlbumsScreen()
-            }
             composable("library") {
                 LibraryScreen()
             }
-            
+
             composable("favorites") {
                 FavoritesScreen()
             }
@@ -96,46 +87,68 @@ fun AppRoot(store: PlaylistStore) {
             composable("recent") {
                 RecentScreen()
             }
-            
+
+            composable("artists") {
+                ArtistsScreen()
+            }
+
+            composable("albums") {
+                AlbumsScreen()
+            }
+
+            composable("queue") {
+                QueueScreen(
+                    onBack = {
+                        nav.popBackStack()
+                    }
+                )
+            }
+
+            composable("player") {
+                FullPlayerScreen(
+                    onBack = {
+                        nav.popBackStack()
+                    },
+                    onOpenQueue = {
+                        nav.navigate("queue")
+                    }
+                )
+            }
+
             composable("playlists") {
                 PlaylistsScreen(
-                store = store,
-                  onOpen = { playlist ->
-                    nav.navigate("playlist/$playlist")
-                },
-                onImport = {
-                    nav.navigate("library")
+                    store = store,
+                    onOpen = { playlist ->
+                        nav.navigate("playlist/$playlist")
+                    },
+                    onImport = {
+                        nav.navigate("library")
+                    }
+                )
             }
-                
-            )
-            }
-            
+
             composable("search") {
                 SearchAndImportScreen(store)
             }
-            Button(onClick = { nav.navigate("library") }) { Text("Biblioteca") }
-            Button(onClick = { nav.navigate("favorites") }) { Text("Favoritos") }
-            Button(onClick = { nav.navigate("recent") }) { Text("Recentes") }
-            
-            composable("queue") {
-                QueueScreen(
-                    onBack = { nav.popBackStack() }
-                 )
-            }
+
             composable(
                 route = "playlist/{name}",
-                arguments = listOf(navArgument("name") {
-                    type = NavType.StringType
-                })
-            ) { backStackEntry ->
-
-                val name = backStackEntry.arguments?.getString("name") ?: ""
+                arguments = listOf(
+                    navArgument("name") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { entry ->
+                val name = entry.arguments?.getString("name").orEmpty()
 
                 PlaylistDetailScreen(
                     playlistName = name,
                     store = store,
-                    onBack = { nav.popBackStack() }
+                    onBack = {
+                        nav.popBackStack()
+                    }
                 )
             }
         }
     }
+}
