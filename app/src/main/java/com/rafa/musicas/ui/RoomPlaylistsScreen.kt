@@ -95,6 +95,33 @@ fun RoomPlaylistsScreen(
                         }
                     }
                 }
+            if (renameTarget != null) {
+               AlertDialog(
+                    onDismissRequest = { renameTarget = null },
+                    title = { Text("Renomear playlist") },
+                    text = {
+                        OutlinedTextField(
+                            value = renameText,
+                            onValueChange = { renameText = it },
+                            singleLine = true
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.renamePlaylist(renameTarget!!, renameText)
+                            renameTarget = null
+                            renameText = ""
+                        }) {
+                           Text("Salvar")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { renameTarget = null }) {
+                        Text("Cancelar")
+                      }
+                  }
+              )
+            }
             }
         }
     }
