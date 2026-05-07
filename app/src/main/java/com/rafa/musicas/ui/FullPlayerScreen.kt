@@ -96,8 +96,11 @@ fun FullPlayerScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                     }
-                }
-            )
+                    },
+                actions = {
+                    IconButton(onClick = onOpenQueue) {
+                        Icon(Icons.Default.QueueMusic, contentDescription = "Fila")
+                    }
         }
     ) { padding ->
         Column(
