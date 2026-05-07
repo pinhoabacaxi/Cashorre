@@ -88,23 +88,39 @@ class MusicRepository(context: Context) {
 
     suspend fun markPlayed(uri: String) = withContext(Dispatchers.IO) {
         musicDao.markPlayed(uri)
+    suspend fun moveTrackInPlaylist(
+        playlistName: String,
+        tracks: List<MusicEntity>,
+        fromIndex: Int,
+        toIndex: Int
+    ) = withContext(Dispatchers.IO) {
+        if (fromIndex !in tracks.indices || toIndex !in tracks.indices) return@withContext
+
+        val mutable = tracks.toMutableList()
+        val moved = mutable.removeAt(fromIndex)
+        mutable.add(toIndex, moved)
+
+        mutable.forEachIndexed { index, track ->
+            playlistDao.updateTrackPosition(playlistName, track.uri, index)
+        }
+    }
+        }
+
+        private fun sanitizeName(name: String): String =
+            name.trim()
+                .replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+                .ifEmpty { "Playlist" }
     }
 
-    private fun sanitizeName(name: String): String =
-        name.trim()
-            .replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
-            .ifEmpty { "Playlist" }
-}
-
-fun MusicEntity.toMediaItem(): MediaItem {
-    return MediaItem.Builder()
-        .setMediaId(uri)
-        .setUri(uri)
-        .setMediaMetadata(
-            MediaMetadata.Builder()
-                .setDisplayTitle(displayName)
-                .setArtist(author)
-                .build()
-        )
-        .build()
+    fun MusicEntity.toMediaItem(): MediaItem {
+        return MediaItem.Builder()
+            .setMediaId(uri)
+            .setUri(uri)
+            .setMediaMetadata(
+                 MediaMetadata.Builder()
+                    .setDisplayTitle(displayName)
+                    .setArtist(author)
+                    .build()
+            )
+             .build()
 }
