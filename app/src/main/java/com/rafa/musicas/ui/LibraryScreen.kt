@@ -17,7 +17,9 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -51,6 +53,8 @@ fun LibraryScreen(
 
     val tracks by viewModel.tracks.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
 
     var selectedTrack by remember { mutableStateOf<MusicEntity?>(null) }
     var showCreatePlaylist by remember { mutableStateOf(false) }
@@ -79,8 +83,46 @@ fun LibraryScreen(
 
         Spacer(Modifier.height(12.dp))
 
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { viewModel.updateSearchQuery(it) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text("Buscar música, artista ou álbum") },
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = null)
+            }
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            FilterChipButton(
+                label = "Todas",
+                selected = selectedFilter == LibraryFilter.ALL,
+                onClick = { viewModel.setFilter(LibraryFilter.ALL) }
+            )
+
+            FilterChipButton(
+                label = "Favoritas",
+                selected = selectedFilter == LibraryFilter.FAVORITES,
+                onClick = { viewModel.setFilter(LibraryFilter.FAVORITES) }
+            )
+
+            FilterChipButton(
+                label = "Recentes",
+                selected = selectedFilter == LibraryFilter.RECENT,
+                onClick = { viewModel.setFilter(LibraryFilter.RECENT) }
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
         if (tracks.isEmpty()) {
-            Text("Nenhuma música encontrada. Toque em Escanear para buscar músicas no dispositivo.")
+            Text("Nenhuma música encontrada para este filtro.")
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -159,6 +201,23 @@ fun LibraryScreen(
 }
 
 @Composable
+private fun FilterChipButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    AssistChip(
+        onClick = onClick,
+        label = { Text(label) },
+        leadingIcon = {
+            if (selected) {
+                Icon(Icons.Default.Favorite, contentDescription = null)
+            }
+        }
+    )
+}
+
+@Composable
 private fun LibraryTrackRow(
     track: MusicEntity,
     onPlay: () -> Unit,
@@ -193,7 +252,7 @@ private fun LibraryTrackRow(
                     maxLines = 1
                 )
                 Text(
-                    text = track.author,
+                    text = "${track.author}${track.album?.let { " • $it" } ?: ""}",
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1
                 )
