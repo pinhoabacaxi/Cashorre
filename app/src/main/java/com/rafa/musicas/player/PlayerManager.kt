@@ -35,7 +35,7 @@ object PlayerManager {
                 true
             )
             volume = appVolume
-            handleAudioBecomingNoisy = true
+            setHandleAudioBecomingNoisy(true)
         }
 
         player = p
