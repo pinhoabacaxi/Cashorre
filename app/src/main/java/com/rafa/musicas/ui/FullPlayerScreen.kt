@@ -83,8 +83,9 @@ fun FullPlayerScreen(
             if (!isUserSeeking && duration > 0) {
                 sliderPosition = position.toFloat() / duration.toFloat()
             }
+            PlayerManager.saveQueue(context)
 
-            delay(500)
+            delay(2000)
         }
     }
 
