@@ -6,18 +6,51 @@ import androidx.lifecycle.viewModelScope
 import com.rafa.musicas.data.MusicRepository
 import com.rafa.musicas.data.db.MusicEntity
 import com.rafa.musicas.data.db.PlaylistEntity
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+enum class LibraryFilter {
+    ALL,
+    FAVORITES,
+    RECENT
+}
 
 class LibraryViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = MusicRepository(application)
 
-    val tracks: StateFlow<List<MusicEntity>> =
+    private val query = MutableStateFlow("")
+    private val filter = MutableStateFlow(LibraryFilter.ALL)
+
+    private val allTracks =
         repository.observeAllTracks()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val tracks: StateFlow<List<MusicEntity>> =
+        combine(allTracks, query, filter) { tracks, q, selectedFilter ->
+            val base = when (selectedFilter) {
+                LibraryFilter.ALL -> tracks
+                LibraryFilter.FAVORITES -> tracks.filter { it.isFavorite }
+                LibraryFilter.RECENT -> tracks.filter { it.lastPlayedAt != null }
+                    .sortedByDescending { it.lastPlayedAt }
+            }
+
+            val normalizedQuery = q.trim().lowercase()
+
+            if (normalizedQuery.isBlank()) {
+                base
+            } else {
+                base.filter {
+                    it.displayName.lowercase().contains(normalizedQuery) ||
+                        it.author.lowercase().contains(normalizedQuery) ||
+                        (it.album ?: "").lowercase().contains(normalizedQuery)
+                }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val favorites: StateFlow<List<MusicEntity>> =
         repository.observeFavorites()
@@ -30,6 +63,17 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     val playlists: StateFlow<List<PlaylistEntity>> =
         repository.observePlaylists()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val searchQuery: StateFlow<String> = query
+    val selectedFilter: StateFlow<LibraryFilter> = filter
+
+    fun updateSearchQuery(value: String) {
+        query.value = value
+    }
+
+    fun setFilter(value: LibraryFilter) {
+        filter.value = value
+    }
 
     fun scanDevice() {
         viewModelScope.launch {
@@ -60,6 +104,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             repository.addTrackToPlaylist(playlistName, track)
         }
     }
+
     fun renamePlaylist(oldName: String, newName: String) {
         viewModelScope.launch {
             repository.renamePlaylist(oldName, newName)
@@ -67,13 +112,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun deletePlaylist(name: String) {
-    viewModelScope.launch {
-        repository.deletePlaylist(name)
+        viewModelScope.launch {
+            repository.deletePlaylist(name)
         }
     }
-    fun deletePlaylist(name: String) {
-    viewModelScope.launch {
-        repository.deletePlaylist(name)
-    }
-}
 }
