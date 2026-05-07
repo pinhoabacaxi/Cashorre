@@ -104,6 +104,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     val searchQuery: StateFlow<String> = query
     val selectedFilter: StateFlow<LibraryFilter> = filter
+    private val _scanStatus = MutableStateFlow<String?>(null)
+    val scanStatus: StateFlow<String?> = _scanStatus
 
     fun updateSearchQuery(value: String) {
         query.value = value
@@ -115,7 +117,15 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun scanDevice() {
         viewModelScope.launch {
-            repository.scanDeviceToLibrary()
+            _scanStatus.value = "Escaneando músicas..."
+
+            val count = repository.scanDeviceToLibrary()
+
+            _scanStatus.value = if (count > 0) {
+                "$count músicas encontradas/atualizadas"
+            } else {
+                "Nenhuma música nova encontrada"
+            }
         }
     }
 
