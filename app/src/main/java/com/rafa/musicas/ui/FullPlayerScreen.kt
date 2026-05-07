@@ -20,11 +20,9 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -55,10 +53,15 @@ fun FullPlayerScreen(
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
     var title by remember { mutableStateOf("Nada tocando") }
     var artist by remember { mutableStateOf("Desconhecido") }
+    var artworkUri by remember { mutableStateOf<String?>(null) }
+
     var position by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
     var sliderPosition by remember { mutableFloatStateOf(0f) }
     var isUserSeeking by remember { mutableStateOf(false) }
+
+    var shuffleEnabled by remember { mutableStateOf(player.shuffleModeEnabled) }
+    var repeatEnabled by remember { mutableStateOf(player.repeatMode != Player.REPEAT_MODE_OFF) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -67,6 +70,10 @@ fun FullPlayerScreen(
             val metadata = player.currentMediaItem?.mediaMetadata
             title = metadata?.displayTitle?.toString() ?: "Nada tocando"
             artist = metadata?.artist?.toString() ?: "Desconhecido"
+            artworkUri = metadata?.artworkUri?.toString()
+
+            shuffleEnabled = player.shuffleModeEnabled
+            repeatEnabled = player.repeatMode != Player.REPEAT_MODE_OFF
 
             position = player.currentPosition.coerceAtLeast(0L)
             duration = if (player.duration > 0) player.duration else 0L
@@ -99,21 +106,10 @@ fun FullPlayerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Surface(
-                modifier = Modifier.size(260.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                tonalElevation = 8.dp,
-                shape = MaterialTheme.shapes.extraLarge
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text("♪", style = MaterialTheme.typography.displayLarge)
-                    Text("Capa do álbum", style = MaterialTheme.typography.bodySmall)
-                }
-            }
+            ArtworkBox(
+                artworkUri = artworkUri,
+                size = 280.dp
+            )
 
             Spacer(Modifier.height(32.dp))
 
@@ -164,25 +160,42 @@ fun FullPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = {
-                    player.shuffleModeEnabled = !player.shuffleModeEnabled
-                }) {
-                    Icon(Icons.Default.Shuffle, contentDescription = "Shuffle")
+                IconButton(
+                    onClick = {
+                        player.shuffleModeEnabled = !player.shuffleModeEnabled
+                        shuffleEnabled = player.shuffleModeEnabled
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        contentDescription = "Shuffle",
+                        tint = if (shuffleEnabled) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
+                    )
                 }
 
                 IconButton(onClick = { player.seekToPrevious() }) {
                     Icon(
-                        Icons.Default.SkipPrevious,
+                        imageVector = Icons.Default.SkipPrevious,
                         contentDescription = "Anterior",
                         modifier = Modifier.size(40.dp)
                     )
                 }
 
-                IconButton(onClick = {
-                    if (isPlaying) player.pause() else player.play()
-                }) {
+                IconButton(
+                    onClick = {
+                        if (isPlaying) {
+                            player.pause()
+                        } else {
+                            player.play()
+                        }
+                    }
+                ) {
                     Icon(
-                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
                         modifier = Modifier.size(64.dp)
                     )
@@ -190,20 +203,32 @@ fun FullPlayerScreen(
 
                 IconButton(onClick = { player.seekToNext() }) {
                     Icon(
-                        Icons.Default.SkipNext,
+                        imageVector = Icons.Default.SkipNext,
                         contentDescription = "Próxima",
                         modifier = Modifier.size(40.dp)
                     )
                 }
 
-                IconButton(onClick = {
-                    player.repeatMode =
-                        if (player.repeatMode == Player.REPEAT_MODE_OFF)
-                            Player.REPEAT_MODE_ALL
-                        else
-                            Player.REPEAT_MODE_OFF
-                }) {
-                    Icon(Icons.Default.Repeat, contentDescription = "Repeat")
+                IconButton(
+                    onClick = {
+                        player.repeatMode =
+                            if (player.repeatMode == Player.REPEAT_MODE_OFF) {
+                                Player.REPEAT_MODE_ALL
+                            } else {
+                                Player.REPEAT_MODE_OFF
+                            }
+                        repeatEnabled = player.repeatMode != Player.REPEAT_MODE_OFF
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Repeat,
+                        contentDescription = "Repeat",
+                        tint = if (repeatEnabled) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
+                    )
                 }
             }
         }
