@@ -46,6 +46,7 @@ import com.rafa.musicas.data.db.MusicEntity
 import com.rafa.musicas.data.db.PlaylistEntity
 import com.rafa.musicas.data.toMediaItem
 import com.rafa.musicas.player.PlayerManager
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun LibraryScreen(
@@ -355,6 +356,7 @@ private fun LibraryTrackRow(
                     text = track.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 2
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
