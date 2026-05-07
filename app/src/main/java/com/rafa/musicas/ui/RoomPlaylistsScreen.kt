@@ -33,6 +33,8 @@ fun RoomPlaylistsScreen(
     onOpenLibrary: () -> Unit,
     viewModel: LibraryViewModel = viewModel()
 ) {
+    var renameTarget by remember { mutableStateOf<String?>(null) }
+    var renameText by remember { mutableStateOf("") }
     val playlists by viewModel.playlists.collectAsState()
 
     Column(
