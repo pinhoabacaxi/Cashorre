@@ -1,6 +1,7 @@
 package com.rafa.musicas.player
 
 import android.content.Context
+import android.media.AudioManager
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -34,6 +35,7 @@ object PlayerManager {
                 true
             )
             volume = appVolume
+            handleAudioBecomingNoisy = true
         }
 
         player = p
@@ -54,7 +56,6 @@ object PlayerManager {
         p.setMediaItems(items, safeIndex, 0L)
         p.prepare()
         p.playWhenReady = true
-
         saveQueue(context)
     }
 
@@ -91,6 +92,7 @@ object PlayerManager {
 
     fun removeFromQueue(context: Context, index: Int) {
         val p = get(context)
+
         if (index in 0 until p.mediaItemCount) {
             p.removeMediaItem(index)
             saveQueue(context)
@@ -99,6 +101,7 @@ object PlayerManager {
 
     fun moveQueueItem(context: Context, fromIndex: Int, toIndex: Int) {
         val p = get(context)
+
         if (
             fromIndex in 0 until p.mediaItemCount &&
             toIndex in 0 until p.mediaItemCount &&
@@ -111,6 +114,7 @@ object PlayerManager {
 
     fun getQueue(context: Context): List<MediaItem> {
         val p = get(context)
+
         return List(p.mediaItemCount) { index ->
             p.getMediaItemAt(index)
         }
@@ -146,11 +150,14 @@ object PlayerManager {
     }
 
     private fun restoreQueue(context: Context) {
-        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs =
+            context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
         val raw = prefs.getString(KEY_QUEUE, null) ?: return
 
         val items = runCatching {
             val array = JSONArray(raw)
+
             List(array.length()) { index ->
                 val obj = array.getJSONObject(index)
 
@@ -160,8 +167,11 @@ object PlayerManager {
                     .setAlbumTitle(obj.optString("album", ""))
 
                 val artwork = obj.optString("artworkUri", "")
+
                 if (artwork.isNotBlank()) {
-                    metadataBuilder.setArtworkUri(android.net.Uri.parse(artwork))
+                    metadataBuilder.setArtworkUri(
+                        android.net.Uri.parse(artwork)
+                    )
                 }
 
                 MediaItem.Builder()
@@ -174,8 +184,13 @@ object PlayerManager {
 
         if (items.isEmpty()) return
 
-        val index = prefs.getInt(KEY_INDEX, 0).coerceIn(items.indices)
-        val position = prefs.getLong(KEY_POSITION, 0L).coerceAtLeast(0L)
+        val index =
+            prefs.getInt(KEY_INDEX, 0)
+                .coerceIn(items.indices)
+
+        val position =
+            prefs.getLong(KEY_POSITION, 0L)
+                .coerceAtLeast(0L)
 
         val p = get(context)
         p.setMediaItems(items, index, position)
@@ -184,6 +199,7 @@ object PlayerManager {
 
     fun setAppVolume(context: Context, value: Float) {
         appVolume = value.coerceIn(0f, 1f)
+
         get(context).volume = appVolume
 
         context.applicationContext
@@ -200,5 +216,21 @@ object PlayerManager {
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getFloat(KEY_VOLUME, 1.0f)
             .coerceIn(0f, 1f)
+    }
+
+    fun pause(context: Context) {
+        get(context).pause()
+        saveQueue(context)
+    }
+
+    fun resume(context: Context) {
+        get(context).play()
+        saveQueue(context)
+    }
+
+    fun stop(context: Context) {
+        val p = get(context)
+        p.stop()
+        saveQueue(context)
     }
 }
