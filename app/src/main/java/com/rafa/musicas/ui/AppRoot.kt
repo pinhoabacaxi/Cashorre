@@ -53,7 +53,8 @@ fun AppRoot(store: PlaylistStore) {
         
             composable("player") {
                 FullPlayerScreen(
-                onBack = { nav.popBackStack() }
+                onBack = { nav.popBackStack() },
+                onOpenQueue = { nav.navigate("queue") }
                 )
             }
             composable("room_playlists") {
