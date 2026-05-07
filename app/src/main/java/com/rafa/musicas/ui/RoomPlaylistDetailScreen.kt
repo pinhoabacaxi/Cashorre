@@ -58,6 +58,11 @@ class RoomPlaylistDetailViewModel(
         }
     }
 
+    fun moveTrack(playlistName: String, currentTracks: List<MusicEntity>, fromIndex: Int, toIndex: Int) {
+        viewModelScope.launch {
+            repository.moveTrackInPlaylist(playlistName, currentTracks, fromIndex, toIndex)
+        }
+    }
     fun markPlayed(track: MusicEntity) {
         viewModelScope.launch {
             repository.markPlayed(track.uri)
