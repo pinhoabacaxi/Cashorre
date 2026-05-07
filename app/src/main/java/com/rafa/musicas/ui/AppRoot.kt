@@ -77,6 +77,13 @@ fun AppRoot(store: PlaylistStore) {
                     onBack = { nav.popBackStack() }
                  )
             }
+            composable("artists") {
+                ArtistsScreen()
+            }
+
+            composable("albums") {
+                AlbumsScreen()
+            }
             composable("library") {
                 LibraryScreen()
             }
