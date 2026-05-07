@@ -40,7 +40,7 @@ fun AppRoot(store: PlaylistStore) {
 
         NavHost(
             navController = nav,
-            startDestination = "playlists",
+            startDestination = "room_playlists"
             modifier = Modifier.padding(padding)
         ) {
 
