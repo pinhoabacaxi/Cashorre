@@ -15,10 +15,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -354,13 +354,13 @@ private fun LibraryTrackRow(
                 Text(
                     text = track.displayName,
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1
+                    maxLines = 2
                 )
 
                 Text(
                     text = track.author,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1
+                    maxLines = 2
                 )
             }
 
@@ -385,14 +385,14 @@ private fun LibraryTrackRow(
 
             IconButton(onClick = onPlayNext) {
                 Icon(
-                    Icons.Default.KeyboardArrowRight,
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight
                     contentDescription = "Tocar a seguir"
                 )
             }
 
             IconButton(onClick = onAddToQueue) {
                 Icon(
-                    Icons.Default.QueueMusic,
+                    Icons.AutoMirrored.Filled.QueueMusic
                     contentDescription = "Fila"
                 )
             }
