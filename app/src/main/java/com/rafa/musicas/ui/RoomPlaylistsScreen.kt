@@ -51,6 +51,12 @@ fun RoomPlaylistsScreen(
                 Text("${playlists.size} playlists", style = MaterialTheme.typography.bodySmall)
             }
 
+            Button(onClick = {
+                renameTarget = playlist.name
+                renameText = playlist.name
+            }) {
+                Text("Renomear")
+            }
             Button(onClick = onOpenLibrary) {
                 Icon(Icons.Default.LibraryMusic, contentDescription = null)
                 Text(" Biblioteca")
