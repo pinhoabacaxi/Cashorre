@@ -41,11 +41,13 @@ import androidx.media3.common.Player
 import com.rafa.musicas.player.PlayerManager
 import kotlinx.coroutines.delay
 import kotlin.math.max
+import androidx.compose.material.icons.filled.QueueMusic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FullPlayerScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenQueue: () -> Unit
 ) {
     val context = LocalContext.current
     val player = remember { PlayerManager.get(context) }
