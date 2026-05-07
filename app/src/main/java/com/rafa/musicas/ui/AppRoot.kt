@@ -35,11 +35,9 @@ private data class BottomDestination(
 )
 
 private val mainDestinations = listOf(
-    BottomDestination("library", "Biblioteca", Icons.Default.LibraryMusic),
-    BottomDestination("room_playlists", "Playlists", Icons.Default.PlaylistPlay),
-    BottomDestination("favorites", "Favoritos", Icons.Default.Favorite),
-    BottomDestination("artists", "Artistas", Icons.Default.Person),
-    BottomDestination("albums", "Álbuns", Icons.Default.Album),
+    BottomDestination("library", "Músicas", Icons.Default.LibraryMusic),
+    BottomDestination("room_playlists", "Listas", Icons.Default.PlaylistPlay),
+    BottomDestination("favorites", "Favoritas", Icons.Default.Favorite),
     BottomDestination("settings", "Config", Icons.Default.Settings)
 )
 
