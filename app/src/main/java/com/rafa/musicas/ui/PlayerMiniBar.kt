@@ -31,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.rafa.musicas.player.PlayerManager
 import kotlinx.coroutines.delay
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.media3.common.Player
 
 @Composable
 fun PlayerMiniBar(
@@ -44,8 +46,10 @@ fun PlayerMiniBar(
     var artist by remember { mutableStateOf("Desconhecido") }
     var artworkUri by remember { mutableStateOf<String?>(null) }
     var volume by remember { mutableFloatStateOf(PlayerManager.getAppVolume()) }
-
+    var repeatOne by remember { mutableStateOf(player.repeatMode == Player.REPEAT_MODE_ONE) }
+    
     LaunchedEffect(Unit) {
+        repeatOne = player.repeatMode == Player.REPEAT_MODE_ONE
         while (true) {
             isPlaying = player.isPlaying
 
@@ -106,6 +110,24 @@ fun PlayerMiniBar(
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause"
+                    )
+                }
+                IconButton(onClick = { player.repeatMode =
+                    if (player.repeatMode == Player.REPEAT_MODE_ONE) { Player.REPEAT_MODE_OFF
+                    } else { Player.REPEAT_MODE_ONE
+                    }
+                    repeatOne = player.repeatMode == Player.REPEAT_MODE_ONE
+                    PlayerManager.saveQueue(context)
+                }
+                          ) { 
+                    Icon(
+                    imageVector = Icons.Default.RepeatOne,
+                        contentDescription = "Repetir música",
+                        tint = if (repeatOne) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
                 }
 
