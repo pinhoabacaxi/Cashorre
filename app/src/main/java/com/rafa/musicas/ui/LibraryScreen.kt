@@ -41,8 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rafa.musicas.data.db.MusicEntity
@@ -62,8 +62,8 @@ fun LibraryScreen(
     val playlists by viewModel.playlists.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
-    val scanStatus by viewModel.scanStatus.collectAsState()
     val sortMode by viewModel.sortMode.collectAsState()
+    val scanStatus by viewModel.scanStatus.collectAsState()
 
     var selectedTrack by remember { mutableStateOf<MusicEntity?>(null) }
     var showCreatePlaylist by remember { mutableStateOf(false) }
@@ -72,7 +72,7 @@ fun LibraryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -101,12 +101,14 @@ fun LibraryScreen(
         }
 
         scanStatus?.let { status ->
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             Text(
                 text = status,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -115,9 +117,11 @@ fun LibraryScreen(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { viewModel.updateSearchQuery(it) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp),
             singleLine = true,
-            label = { Text("Buscar música, artista ou álbum") },
+            label = { Text("Buscar") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -126,11 +130,11 @@ fun LibraryScreen(
             }
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             FilterChipButton(
                 label = "Todas",
@@ -149,39 +153,40 @@ fun LibraryScreen(
                 selected = selectedFilter == LibraryFilter.RECENT,
                 onClick = { viewModel.setFilter(LibraryFilter.RECENT) }
             )
-            Spacer(Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SortChip(
-                    text = "Nome",
-                    selected = sortMode == LibrarySortMode.TITLE,
-                    onClick = { viewModel.setSortMode(LibrarySortMode.TITLE) }
-                )
-
-                SortChip(
-                    text = "Artista",
-                    selected = sortMode == LibrarySortMode.ARTIST,
-                    onClick = { viewModel.setSortMode(LibrarySortMode.ARTIST) }
-                )
-
-                SortChip(
-                    text = "Álbum",
-                    selected = sortMode == LibrarySortMode.ALBUM,
-                    onClick = { viewModel.setSortMode(LibrarySortMode.ALBUM) }
-                )
-
-                 SortChip(
-                    text = "Recentes",
-                    selected = sortMode == LibrarySortMode.RECENT,
-                    onClick = { viewModel.setSortMode(LibrarySortMode.RECENT) }
-                )
-            }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            SortChip(
+                text = "Nome",
+                selected = sortMode == LibrarySortMode.TITLE,
+                onClick = { viewModel.setSortMode(LibrarySortMode.TITLE) }
+            )
+
+            SortChip(
+                text = "Artista",
+                selected = sortMode == LibrarySortMode.ARTIST,
+                onClick = { viewModel.setSortMode(LibrarySortMode.ARTIST) }
+            )
+
+            SortChip(
+                text = "Álbum",
+                selected = sortMode == LibrarySortMode.ALBUM,
+                onClick = { viewModel.setSortMode(LibrarySortMode.ALBUM) }
+            )
+
+            SortChip(
+                text = "Recentes",
+                selected = sortMode == LibrarySortMode.RECENT,
+                onClick = { viewModel.setSortMode(LibrarySortMode.RECENT) }
+            )
+        }
+
+        Spacer(Modifier.height(4.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -207,7 +212,7 @@ fun LibraryScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(
                     items = tracks,
@@ -304,14 +309,14 @@ private fun EmptyLibraryState(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 48.dp),
+            .padding(top = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Icon(
             imageVector = Icons.Default.LibraryMusic,
             contentDescription = null,
-            modifier = Modifier.size(72.dp),
+            modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.primary
         )
 
@@ -338,9 +343,10 @@ private fun FilterChipButton(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    AssistChip(
+    FilterChip(
+        selected = selected,
         onClick = onClick,
-        label = { Text(label) },
+        label = { Text(label, maxLines = 1) },
         leadingIcon = {
             if (selected) {
                 Icon(
@@ -361,7 +367,7 @@ private fun SortChip(
     FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(text) }
+        label = { Text(text, maxLines = 1) }
     )
 }
 
@@ -381,8 +387,8 @@ private fun LibraryTrackRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -390,10 +396,10 @@ private fun LibraryTrackRow(
             ) {
                 ArtworkBox(
                     artworkUri = track.artworkUri,
-                    size = 56.dp
+                    size = 50.dp
                 )
 
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(10.dp))
 
                 Column(
                     modifier = Modifier.weight(1f)
