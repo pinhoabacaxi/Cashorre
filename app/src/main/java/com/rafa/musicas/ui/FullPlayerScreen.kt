@@ -98,6 +98,7 @@ fun FullPlayerScreen(
 
     LaunchedEffect(Unit) {
 
+        repeatMode = player.repeatMode
         while (true) {
 
             isPlaying = player.isPlaying
@@ -343,19 +344,31 @@ fun FullPlayerScreen(
                                 else -> Player.REPEAT_MODE_OFF
                                 }
 
-                            repeatEnabled = player.repeatMode != Player.REPEAT_MODE_OFF
+                            repeatMode = player.repeatMode
                             PlayerManager.saveQueue(context)
                         }
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Repeat,
-                            contentDescription = "Repeat",
-                            tint = if (repeatEnabled) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
+                        val icon =
+                            when (repeatMode) {
+
+                                Player.REPEAT_MODE_ONE -> {
+                                    Icons.Default.RepeatOne
+                                }
+                                else -> {
+                                    Icons.Default.Repeat
+                                }
                             }
-                        )
+                    val tint =
+                    if (repeatMode != Player.REPEAT_MODE_OFF) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "Modo repetição",
+                        tint = tint
+                    )
                 }
             }
         }
