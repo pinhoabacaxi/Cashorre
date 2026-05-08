@@ -29,67 +29,36 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(LibraryFilter.ALL)
-
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
     private val allTracks =
         repository.observeAllTracks()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val tracks: StateFlow<List<MusicEntity>> =
-        combine(allTracks, query, filter) { tracks, q, selectedFilter ->
-            val base = when (selectedFilter) {
-                LibraryFilter.ALL -> tracks
-                LibraryFilter.FAVORITES -> tracks.filter { it.isFavorite }
-                LibraryFilter.RECENT -> tracks.filter { it.lastPlayedAt != null }
-                    .sortedByDescending { it.lastPlayedAt }
-            
-            }
+    val filteredTracks =
+        combine(
+            tracks,
+            searchQuery
+        ) { tracksList, query ->
 
-            val normalizedQuery = q.trim().lowercase()
-
-            if (normalizedQuery.isBlank()) {
-                base
+            if (query.isBlank()) {
+                tracksList
             } else {
-                base.filter {
-                    it.displayName.lowercase().contains(normalizedQuery) ||
-                        it.author.lowercase().contains(normalizedQuery) ||
-                        (it.album ?: "").lowercase().contains(normalizedQuery)
-                }
-            }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val artists: StateFlow<List<ArtistGroup>> =
-        combine(allTracks, query) { tracks, q ->
-            val filtered = if (q.isBlank()) {
-                tracks
-            } else {
-                tracks.filter {
-                    it.author.lowercase().contains(q.lowercase())
-                }
-            }
+                val q = query.trim().lowercase()
 
-            groupTracksByArtist(filtered)
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+                tracksList.filter { track ->
 
-    val albums: StateFlow<List<AlbumGroup>> =
-        combine(allTracks, query) { tracks, q ->
-            val filtered = if (q.isBlank()) {
-            tracks
-          } else {
-                tracks.filter {
-                (it.album ?: "").lowercase().contains(q.lowercase())
-                }
-          }
-
-            groupTracksByAlbum(filtered)
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+                     track.displayName.lowercase().contains(q) ||
+                     track.author.lowercase().contains(q) ||
+                     (track.album?.lowercase()?.contains(q) == true)
+                 }
+             }
+         }.stateIn(
+             viewModelScope,
+             SharingStarted.WhileSubscribed(5000),
+             emptyList()
+         )
     val favorites: StateFlow<List<MusicEntity>> =
         repository.observeFavorites()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -107,6 +76,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private val _scanStatus = MutableStateFlow<String?>(null)
     val scanStatus: StateFlow<String?> = _scanStatus
 
+
+    fun updateSearchQuery(value: String) {
+        _searchQuery.value = value
+    }
     fun updateSearchQuery(value: String) {
         query.value = value
     }
