@@ -163,14 +163,6 @@ object PlayerManager {
             Intent(appContext, PlaybackService::class.java)
         )
     }
-    private fun ensurePlaybackService(context: Context) {
-        val appContext = context.applicationContext
-
-        ContextCompat.startForegroundService(
-            appContext,
-            Intent(appContext, PlaybackService::class.java)
-        )
-    }
     private fun restoreQueue(context: Context) {
         val prefs =
             context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
