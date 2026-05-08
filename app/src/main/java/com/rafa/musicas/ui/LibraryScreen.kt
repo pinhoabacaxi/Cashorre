@@ -130,30 +130,6 @@ fun LibraryScreen(
             }
         )
 
-        Spacer(Modifier.height(6.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            FilterChipButton(
-                label = "Todas",
-                selected = selectedFilter == LibraryFilter.ALL,
-                onClick = { viewModel.setFilter(LibraryFilter.ALL) }
-            )
-
-            FilterChipButton(
-                label = "Favoritas",
-                selected = selectedFilter == LibraryFilter.FAVORITES,
-                onClick = { viewModel.setFilter(LibraryFilter.FAVORITES) }
-            )
-
-            FilterChipButton(
-                label = "Recentes",
-                selected = selectedFilter == LibraryFilter.RECENT,
-                onClick = { viewModel.setFilter(LibraryFilter.RECENT) }
-            )
-        }
 
         Spacer(Modifier.height(4.dp))
 
@@ -185,23 +161,7 @@ fun LibraryScreen(
                 onClick = { viewModel.setSortMode(LibrarySortMode.RECENT) }
             )
         }
-
-        Spacer(Modifier.height(4.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            AssistChip(
-                onClick = onOpenArtists,
-                label = { Text("Artistas") }
-            )
-
-            AssistChip(
-                onClick = onOpenAlbums,
-                label = { Text("Álbuns") }
-            )
-        }
+   }
 
         Spacer(Modifier.height(6.dp))
 
