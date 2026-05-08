@@ -89,3 +89,4 @@ class MainActivity : ComponentActivity() {
                 tv.text = text
             }
         }
+    }
