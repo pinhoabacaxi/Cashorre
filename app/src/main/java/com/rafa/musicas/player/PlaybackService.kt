@@ -1,5 +1,8 @@
 package com.rafa.musicas.player
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -89,6 +92,16 @@ class PlaybackService : MediaSessionService() {
 
     private fun updateNotification(player: Player) {
         val pendingIntent = contentIntent ?: return
+
+        if (
+            Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
 
         NotificationManagerCompat.from(this).notify(
             NOTIFICATION_ID,
