@@ -335,52 +335,28 @@ fun FullPlayerScreen(
 
                 IconButton(
                     onClick = {
-
                         player.repeatMode =
-                            if (
-                                player.repeatMode ==
-                                Player.REPEAT_MODE_OFF
-                            ) {
-                                Player.REPEAT_MODE_ALL
-                            } else {
-                                Player.REPEAT_MODE_OFF
-                            }
+                            when (player.repeatMode) {
+                                Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
+                                    Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
+                                else -> Player.REPEAT_MODE_OFF
+                                }
 
-                        repeatEnabled =
-                            player.repeatMode !=
-                                Player.REPEAT_MODE_OFF
-                    }
-                ) {
-
-                    Icon(
-                        imageVector = Icons.Default.Repeat,
-                        contentDescription = "Repeat",
-
-                        tint =
-                            if (repeatEnabled) {
+                            repeatEnabled = player.repeatMode != Player.REPEAT_MODE_OFF
+                            PlayerManager.saveQueue(context)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Repeat,
+                            contentDescription = "Repeat",
+                            tint = if (repeatEnabled) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface
                             }
-                    )
+                        )
                 }
             }
         }
     }
-}
-
-private fun formatDuration(ms: Long): String {
-
-    val totalSeconds = max(
-        0,
-        ms / 1000
-    )
-
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-
-    return "%d:%02d".format(
-        minutes,
-        seconds
-    )
 }
