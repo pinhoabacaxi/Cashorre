@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.rafa.musicas.data.AlbumGroup
-import com.rafa.musicas.data.ArtistGroup
-import com.rafa.musicas.data.groupTracksByAlbum
-import com.rafa.musicas.data.groupTracksByArtist
+
+enum class LibraryFilter {
+    ALL,
+    FAVORITES,
+    RECENT
+}
 
 enum class LibrarySortMode {
     TITLE,
@@ -23,97 +25,55 @@ enum class LibrarySortMode {
     ALBUM,
     RECENT
 }
-enum class LibraryFilter {
-    ALL,
-    FAVORITES,
-    RECENT
-}
 
 class LibraryViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = MusicRepository(application)
 
-    private val query = MutableStateFlow("")
-    private val filter = MutableStateFlow(LibraryFilter.ALL)
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery
-    private val _sortMode =
-        MutableStateFlow(LibrarySortMode.TITLE)
-
-    val sortMode: StateFlow<LibrarySortMode> =
-        _sortMode
-    private val allTracks =
+    private val allTracks: StateFlow<List<MusicEntity>> =
         repository.observeAllTracks()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val filteredTracks =
-        combine(
-            tracks,
-            searchQuery,
-            sortMode
-        ) { tracksList, query, mode ->
+    private val query = MutableStateFlow("")
+    private val filter = MutableStateFlow(LibraryFilter.ALL)
+    private val sort = MutableStateFlow(LibrarySortMode.TITLE)
+    private val _scanStatus = MutableStateFlow<String?>(null)
 
-            val filtered =
-                if (query.isBlank()) {
-                    tracksList
-                } else {
+    val searchQuery: StateFlow<String> = query
+    val selectedFilter: StateFlow<LibraryFilter> = filter
+    val sortMode: StateFlow<LibrarySortMode> = sort
+    val scanStatus: StateFlow<String?> = _scanStatus
 
-                    val q = query.trim().lowercase()
+    val tracks: StateFlow<List<MusicEntity>> =
+        combine(allTracks, query, filter, sort) { source, search, selectedFilter, selectedSort ->
+            val filteredByMode = when (selectedFilter) {
+                LibraryFilter.ALL -> source
+                LibraryFilter.FAVORITES -> source.filter { it.isFavorite }
+                LibraryFilter.RECENT -> source
+                    .filter { it.lastPlayedAt != null }
+                    .sortedByDescending { it.lastPlayedAt ?: 0L }
+            }
 
-                    tracksList.filter { track ->
+            val q = search.trim().lowercase()
 
-                        track.displayName
-                            .lowercase()
-                            .contains(q)
-
-                        ||
-
-                        track.author
-                            .lowercase()
-                            .contains(q)
-
-                        ||
-
-                        (
-                            track.album
-                                ?.lowercase()
-                                ?.contains(q)
-                                == true
-                        )
-                    }
-                }
-
-            when (mode) {
-
-                LibrarySortMode.TITLE -> {
-                    filtered.sortedBy {
-                        it.displayName.lowercase()
-                    }
-                }
-
-                LibrarySortMode.ARTIST -> {
-                     filtered.sortedBy {
-                        it.author.lowercase()
-                     }
-                }
-
-                LibrarySortMode.ALBUM -> {
-                    filtered.sortedBy {
-                        it.album?.lowercase() ?: ""
-                    }
-                }
-
-                LibrarySortMode.RECENT -> {
-                    filtered.sortedByDescending {
-                        it.id
-                    }
+            val filteredBySearch = if (q.isBlank()) {
+                filteredByMode
+            } else {
+                filteredByMode.filter { track ->
+                    track.displayName.lowercase().contains(q) ||
+                        track.author.lowercase().contains(q) ||
+                        (track.album ?: "").lowercase().contains(q)
                 }
             }
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            emptyList()
-        )
+
+            when (selectedSort) {
+                LibrarySortMode.TITLE -> filteredBySearch.sortedBy { it.displayName.lowercase() }
+                LibrarySortMode.ARTIST -> filteredBySearch.sortedBy { it.author.lowercase() }
+                LibrarySortMode.ALBUM -> filteredBySearch.sortedBy { it.album?.lowercase() ?: "" }
+                LibrarySortMode.RECENT -> filteredBySearch.sortedByDescending { it.lastPlayedAt ?: it.addedAt }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val favorites: StateFlow<List<MusicEntity>> =
         repository.observeFavorites()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -126,32 +86,22 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         repository.observePlaylists()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val searchQuery: StateFlow<String> = query
-    val selectedFilter: StateFlow<LibraryFilter> = filter
-    private val _scanStatus = MutableStateFlow<String?>(null)
-    val scanStatus: StateFlow<String?> = _scanStatus
-
-
-    fun updateSearchQuery(value: String) {
-        _searchQuery.value = value
-    }
     fun updateSearchQuery(value: String) {
         query.value = value
     }
 
-    fun setSortMode(mode: LibrarySortMode) {
-         _sortMode.value = mode
-    }
     fun setFilter(value: LibraryFilter) {
         filter.value = value
+    }
+
+    fun setSortMode(value: LibrarySortMode) {
+        sort.value = value
     }
 
     fun scanDevice() {
         viewModelScope.launch {
             _scanStatus.value = "Escaneando músicas..."
-
             val count = repository.scanDeviceToLibrary()
-
             _scanStatus.value = if (count > 0) {
                 "$count músicas encontradas/atualizadas"
             } else {
