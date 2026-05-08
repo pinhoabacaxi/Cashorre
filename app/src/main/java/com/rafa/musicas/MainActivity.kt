@@ -1,4 +1,5 @@
 package com.rafa.musicas
+package com.maxrave.kotlinyoutubeextractor
 
 import android.Manifest
 import android.os.Build
@@ -11,7 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.rafa.musicas.data.PlaylistStore
 import com.rafa.musicas.ui.AppRoot
-import androidx.appcompat.musicas.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.TextView
 import com.maxrave.musicas.R
