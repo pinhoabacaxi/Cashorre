@@ -62,7 +62,6 @@ fun LibraryScreen(
     val playlists by viewModel.playlists.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
-    val sortMode by viewModel.sortMode.collectAsState()
     val scanStatus by viewModel.scanStatus.collectAsState()
 
     var selectedTrack by remember { mutableStateOf<MusicEntity?>(null) }
@@ -137,28 +136,26 @@ fun LibraryScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            SortChip(
-                text = "Nome",
-                selected = sortMode == LibrarySortMode.TITLE,
-                onClick = { viewModel.setSortMode(LibrarySortMode.TITLE) }
+            FilterChipButton(
+                label = "Tudo",
+                selected = selectedFilter == LibraryFilter.ALL,
+                onClick = { viewModel.setFilter(LibraryFilter.ALL) }
             )
 
-            SortChip(
-                text = "Artista",
-                selected = sortMode == LibrarySortMode.ARTIST,
-                onClick = { viewModel.setSortMode(LibrarySortMode.ARTIST) }
+            FilterChipButton(
+                label = "Recentes",
+                selected = selectedFilter == LibraryFilter.RECENT,
+                onClick = { viewModel.setFilter(LibraryFilter.RECENT) }
             )
 
-            SortChip(
-                text = "Álbum",
-                selected = sortMode == LibrarySortMode.ALBUM,
-                onClick = { viewModel.setSortMode(LibrarySortMode.ALBUM) }
+            AssistChip(
+                onClick = onOpenArtists,
+                label = { Text("Artistas") }
             )
 
-            SortChip(
-                text = "Recentes",
-                selected = sortMode == LibrarySortMode.RECENT,
-                onClick = { viewModel.setSortMode(LibrarySortMode.RECENT) }
+           AssistChip(
+                onClick = onOpenAlbums,
+                label = { Text("Álbuns") }
             )
         }
    }
@@ -315,19 +312,6 @@ private fun FilterChipButton(
                 )
             }
         }
-    )
-}
-
-@Composable
-private fun SortChip(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(text, maxLines = 1) }
     )
 }
 
