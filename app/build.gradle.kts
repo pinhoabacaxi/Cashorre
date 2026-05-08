@@ -70,6 +70,18 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+        // Para AppCompatActivity, findViewById e setContentView
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    
+    // Para o lifecycleScope e Coroutines
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+    
+    // Para o JSEvaluator (necessário para o YTExtractor funcionar)
+    implementation 'com.github.evgenii:jsevaluator:1.0'
+    
+    // Para ActivityResultContracts e permissões modernas
+    implementation "androidx.activity:activity-ktx:1.8.0"
+
     
 
 // UI e Compose
