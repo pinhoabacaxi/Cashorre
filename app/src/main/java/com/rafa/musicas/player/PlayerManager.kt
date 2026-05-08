@@ -9,6 +9,8 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.exoplayer.ExoPlayer
 import org.json.JSONArray
 import org.json.JSONObject
+import android.content.Intent
+import androidx.core.content.ContextCompat
 
 object PlayerManager {
     private const val PREFS_NAME = "player_state"
@@ -48,7 +50,9 @@ object PlayerManager {
         items: List<MediaItem>,
         startIndex: Int = 0
     ) {
-        if (items.isEmpty()) return
+        if (items.isEmpty()) return 
+        
+        ensurePlaybackService(context)
 
         val safeIndex = startIndex.coerceIn(items.indices)
         val p = get(context)
@@ -60,6 +64,7 @@ object PlayerManager {
     }
 
     fun playNow(context: Context, item: MediaItem) {
+        ensurePlaybackService(context)
         val p = get(context)
         p.setMediaItem(item)
         p.prepare()
@@ -68,6 +73,7 @@ object PlayerManager {
     }
 
     fun playNext(context: Context, item: MediaItem) {
+        ensurePlaybackService(context)
         val p = get(context)
         val nextIndex = (p.currentMediaItemIndex + 1).coerceAtLeast(0)
 
@@ -80,6 +86,7 @@ object PlayerManager {
     }
 
     fun addToQueueEnd(context: Context, item: MediaItem) {
+        ensurePlaybackService(context)
         val p = get(context)
 
         if (p.mediaItemCount == 0) {
@@ -148,7 +155,14 @@ object PlayerManager {
             .putFloat(KEY_VOLUME, appVolume)
             .apply()
     }
+    private fun ensurePlaybackService(context: Context) {
+        val appContext = context.applicationContext
 
+        ContextCompat.startForegroundService(
+            appContext,
+            Intent(appContext, PlaybackService::class.java)
+        )
+    }
     private fun restoreQueue(context: Context) {
         val prefs =
             context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
