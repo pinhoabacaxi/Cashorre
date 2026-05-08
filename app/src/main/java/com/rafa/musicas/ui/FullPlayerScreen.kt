@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
@@ -30,19 +31,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.Player
 import com.rafa.musicas.player.PlayerManager
 import kotlinx.coroutines.delay
 import kotlin.math.max
-import androidx.media3.common.Player
-import androidx.compose.material.icons.filled.RepeatOne
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,62 +52,30 @@ fun FullPlayerScreen(
     onBack: () -> Unit,
     onOpenQueue: () -> Unit
 ) {
-
     val context = LocalContext.current
-    val player = remember {
-        PlayerManager.get(context)
-    }
+    val player = remember { PlayerManager.get(context) }
 
-    var isPlaying by remember {
-        mutableStateOf(player.isPlaying)
-    }
+    var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    var title by remember { mutableStateOf("Nada tocando") }
+    var artist by remember { mutableStateOf("Desconhecido") }
+    var artworkUri by remember { mutableStateOf<String?>(null) }
 
-    var title by remember {
-        mutableStateOf("Nada tocando")
-    }
+    var position by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
+    var isUserSeeking by remember { mutableStateOf(false) }
 
-    var artist by remember {
-        mutableStateOf("Desconhecido")
-    }
-
-    var artworkUri by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    var position by remember {
-        mutableLongStateOf(0L)
-    }
-
-    var duration by remember {
-        mutableLongStateOf(0L)
-    }
-
-    var sliderPosition by remember {
-        mutableFloatStateOf(0f)
-    }
-
-    var isUserSeeking by remember {
-        mutableStateOf(false)
-    }
-
-    var shuffleEnabled by remember {
-        mutableStateOf(player.shuffleModeEnabled)
-    }
-
-    var repeatMode by remember {
-        mutableIntStateOf(player.repeatMode)
-    }
+    var shuffleEnabled by remember { mutableStateOf(player.shuffleModeEnabled) }
+    var repeatMode by remember { mutableIntStateOf(player.repeatMode) }
 
     LaunchedEffect(Unit) {
-
-        repeatMode = player.repeatMode
         while (true) {
-
             isPlaying = player.isPlaying
 
             val metadata = player.currentMediaItem?.mediaMetadata
 
             title = metadata?.displayTitle?.toString()
+                ?: metadata?.title?.toString()
                 ?: "Nada tocando"
 
             artist = metadata?.artist?.toString()
@@ -114,67 +84,46 @@ fun FullPlayerScreen(
             artworkUri = metadata?.artworkUri?.toString()
 
             shuffleEnabled = player.shuffleModeEnabled
+            repeatMode = player.repeatMode
 
-            repeatEnabled =
-                player.repeatMode != Player.REPEAT_MODE_OFF
+            position = player.currentPosition.coerceAtLeast(0L)
+            duration = if (player.duration > 0L) player.duration else 0L
 
-            position = player.currentPosition
-                .coerceAtLeast(0L)
-
-            duration =
-                if (player.duration > 0) {
-                    player.duration
-                } else {
-                    0L
-                }
-
-            if (!isUserSeeking && duration > 0) {
+            if (!isUserSeeking && duration > 0L) {
                 sliderPosition =
-                    position.toFloat() / duration.toFloat()
+                    (position.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
             }
 
             PlayerManager.saveQueue(context)
 
-            delay(2000)
+            delay(1000)
         }
     }
 
     Scaffold(
-
         topBar = {
-
             TopAppBar(
-
                 title = {
                     Text("Reproduzindo")
                 },
-
                 navigationIcon = {
-
-                    IconButton(
-                        onClick = onBack
-                    ) {
+                    IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar"
                         )
                     }
                 },
-
                 actions = {
-
-                    IconButton(
-                        onClick = onOpenQueue
-                    ) {
+                    IconButton(onClick = onOpenQueue) {
                         Icon(
-                            Icons.AutoMirrored.Filled.QueueMusic,
+                            imageVector = Icons.AutoMirrored.Filled.QueueMusic,
                             contentDescription = "Fila"
                         )
                     }
                 }
             )
         }
-
     ) { padding ->
 
         Column(
@@ -182,12 +131,9 @@ fun FullPlayerScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .padding(24.dp),
-
             horizontalAlignment = Alignment.CenterHorizontally,
-
             verticalArrangement = Arrangement.Center
         ) {
-
             ArtworkBox(
                 artworkUri = artworkUri,
                 size = 280.dp
@@ -198,7 +144,8 @@ fun FullPlayerScreen(
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
-                maxLines = 2
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(Modifier.height(4.dp))
@@ -207,30 +154,24 @@ fun FullPlayerScreen(
                 text = artist,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(Modifier.height(24.dp))
 
             Slider(
                 value = sliderPosition,
-
                 onValueChange = {
                     isUserSeeking = true
                     sliderPosition = it
                 },
-
                 onValueChangeFinished = {
-
-                    if (duration > 0) {
-                        player.seekTo(
-                            (sliderPosition * duration).toLong()
-                        )
+                    if (duration > 0L) {
+                        player.seekTo((sliderPosition * duration).toLong())
                     }
-
                     isUserSeeking = false
                 },
-
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -238,14 +179,13 @@ fun FullPlayerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-
                 Text(
-                    formatDuration(position),
+                    text = formatDuration(position),
                     style = MaterialTheme.typography.bodySmall
                 )
 
                 Text(
-                    formatDuration(duration),
+                    text = formatDuration(duration),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -254,42 +194,28 @@ fun FullPlayerScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-
                 horizontalArrangement = Arrangement.SpaceEvenly,
-
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 IconButton(
                     onClick = {
-
-                        player.shuffleModeEnabled =
-                            !player.shuffleModeEnabled
-
-                        shuffleEnabled =
-                            player.shuffleModeEnabled
+                        player.shuffleModeEnabled = !player.shuffleModeEnabled
+                        shuffleEnabled = player.shuffleModeEnabled
+                        PlayerManager.saveQueue(context)
                     }
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Shuffle",
-
-                        tint =
-                            if (shuffleEnabled) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            }
+                        tint = if (shuffleEnabled) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
                 }
 
-                IconButton(
-                    onClick = {
-                        player.seekToPrevious()
-                    }
-                ) {
-
+                IconButton(onClick = { player.seekToPrevious() }) {
                     Icon(
                         imageVector = Icons.Default.SkipPrevious,
                         contentDescription = "Anterior",
@@ -299,7 +225,6 @@ fun FullPlayerScreen(
 
                 IconButton(
                     onClick = {
-
                         if (isPlaying) {
                             player.pause()
                         } else {
@@ -307,27 +232,18 @@ fun FullPlayerScreen(
                         }
                     }
                 ) {
-
                     Icon(
-                        imageVector =
-                            if (isPlaying) {
-                                Icons.Default.Pause
-                            } else {
-                                Icons.Default.PlayArrow
-                            },
-
+                        imageVector = if (isPlaying) {
+                            Icons.Default.Pause
+                        } else {
+                            Icons.Default.PlayArrow
+                        },
                         contentDescription = "Play/Pause",
-
                         modifier = Modifier.size(64.dp)
                     )
                 }
 
-                IconButton(
-                    onClick = {
-                        player.seekToNext()
-                    }
-                ) {
-
+                IconButton(onClick = { player.seekToNext() }) {
                     Icon(
                         imageVector = Icons.Default.SkipNext,
                         contentDescription = "Próxima",
@@ -340,37 +256,39 @@ fun FullPlayerScreen(
                         player.repeatMode =
                             when (player.repeatMode) {
                                 Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
-                                    Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
+                                Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
                                 else -> Player.REPEAT_MODE_OFF
-                                }
-
-                            repeatMode = player.repeatMode
-                            PlayerManager.saveQueue(context)
-                        }
-                    ) {
-                        val icon =
-                            when (repeatMode) {
-
-                                Player.REPEAT_MODE_ONE -> {
-                                    Icons.Default.RepeatOne
-                                }
-                                else -> {
-                                    Icons.Default.Repeat
-                                }
                             }
-                    val tint =
-                    if (repeatMode != Player.REPEAT_MODE_OFF) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
+
+                        repeatMode = player.repeatMode
+                        PlayerManager.saveQueue(context)
                     }
+                ) {
+                    val repeatIcon =
+                        if (repeatMode == Player.REPEAT_MODE_ONE) {
+                            Icons.Default.RepeatOne
+                        } else {
+                            Icons.Default.Repeat
+                        }
+
                     Icon(
-                        imageVector = icon,
-                        contentDescription = "Modo repetição",
-                        tint = tint
+                        imageVector = repeatIcon,
+                        contentDescription = "Repetição",
+                        tint = if (repeatMode != Player.REPEAT_MODE_OFF) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
                 }
             }
         }
     }
+}
+
+private fun formatDuration(ms: Long): String {
+    val totalSeconds = max(0L, ms / 1000L)
+    val minutes = totalSeconds / 60L
+    val seconds = totalSeconds % 60L
+    return "%d:%02d".format(minutes, seconds)
 }
