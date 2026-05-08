@@ -63,6 +63,8 @@ fun LibraryScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
     val scanStatus by viewModel.scanStatus.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val filteredTracks by viewModel.filteredTracks.collectAsState()
     
     var selectedTrack by remember { mutableStateOf<MusicEntity?>(null) }
     var showCreatePlaylist by remember { mutableStateOf(false) }
@@ -125,7 +127,7 @@ fun LibraryScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             label = {
-                Text("Buscar música, artista ou álbum")
+                Text("Buscar músicas")
             },
             leadingIcon = {
                 Icon(
@@ -188,7 +190,7 @@ fun LibraryScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        if (tracks.isEmpty()) {
+        if (filteredTracks.isEmpty()) {
 
             Column(
                 modifier = Modifier
@@ -234,7 +236,7 @@ fun LibraryScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                items(tracks) { track ->
+                items(filteredTracks) { track ->
 
                     LibraryTrackRow(
                         track = track,
