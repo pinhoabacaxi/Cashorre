@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -188,28 +190,57 @@ fun LibraryScreen(
 
         if (tracks.isEmpty()) {
 
-            Text("Nenhuma música encontrada.")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 48.dp),
+
+                horizontalAlignment = Alignment.CenterHorizontally,
+
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                Icon(
+                    imageVector = Icons.Default.LibraryMusic,
+                    contentDescription = null,
+                    modifier = Modifier.size(72.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Nenhuma música encontrada",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text =
+                        "Conceda permissão de áudio e escaneie o armazenamento.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Button(
+                    onClick = {
+                        viewModel.scanDevice()
+                    }
+                ) {
+                    Text("Escanear músicas")
+                }
+            }
 
         } else {
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                items(tracks, key = { it.uri }) { track ->
+                items(tracks) { track ->
 
                     LibraryTrackRow(
                         track = track,
 
                         onPlay = {
-                            PlayerManager.setQueueAndPlay(
-                                context = context,
-                                items = tracks.map { it.toMediaItem() },
-                                startIndex = tracks.indexOf(track)
-                            )
-
-                            viewModel.markPlayed(track)
+                            viewModel.playTrack(track)
                         },
 
                         onFavorite = {
@@ -218,20 +249,15 @@ fun LibraryScreen(
 
                         onAddToPlaylist = {
                             selectedTrack = track
+                            showPlaylistDialog = true
                         },
 
                         onPlayNext = {
-                            PlayerManager.playNext(
-                                context,
-                                track.toMediaItem()
-                            )
+                            viewModel.playNext(track)
                         },
 
                         onAddToQueue = {
-                            PlayerManager.addToQueueEnd(
-                                context,
-                                track.toMediaItem()
-                            )
+                            viewModel.addToQueue(track)
                         }
                     )
                 }
