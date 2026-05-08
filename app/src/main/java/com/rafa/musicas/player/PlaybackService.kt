@@ -13,11 +13,11 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.rafa.musicas.MainActivity
-import com.rafa.musicas.R
 
 class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
+    private var contentIntent: PendingIntent? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -33,6 +33,8 @@ class PlaybackService : MediaSessionService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        contentIntent = pendingIntent
+
         mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(pendingIntent)
             .build()
@@ -46,7 +48,7 @@ class PlaybackService : MediaSessionService() {
             object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     PlayerManager.saveQueue(this@PlaybackService)
-                    updateNotification(player, pendingIntent)
+                    updateNotification(player)
                 }
 
                 override fun onMediaItemTransition(
@@ -54,12 +56,12 @@ class PlaybackService : MediaSessionService() {
                     reason: Int
                 ) {
                     PlayerManager.saveQueue(this@PlaybackService)
-                    updateNotification(player, pendingIntent)
+                    updateNotification(player)
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     PlayerManager.saveQueue(this@PlaybackService)
-                    updateNotification(player, pendingIntent)
+                    updateNotification(player)
                 }
             }
         )
@@ -85,10 +87,9 @@ class PlaybackService : MediaSessionService() {
         super.onDestroy()
     }
 
-    private fun updateNotification(
-        player: Player,
-        pendingIntent: PendingIntent
-    ) {
+    private fun updateNotification(player: Player) {
+        val pendingIntent = contentIntent ?: return
+
         NotificationManagerCompat.from(this).notify(
             NOTIFICATION_ID,
             buildNotification(player, pendingIntent)
@@ -109,7 +110,7 @@ class PlaybackService : MediaSessionService() {
             ?: "Reproduzindo música"
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentTitle(title)
             .setContentText(artist)
             .setContentIntent(pendingIntent)
