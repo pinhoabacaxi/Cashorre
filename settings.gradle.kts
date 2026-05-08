@@ -12,7 +12,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
 }
-rootProject.name = "Musicas"
+rootProject.name = "musicas"
 include(":app")
 include (":kotlinYoutubeExtractor")
     }
