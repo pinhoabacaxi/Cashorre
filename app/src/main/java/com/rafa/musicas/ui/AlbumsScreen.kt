@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rafa.musicas.data.db.MusicEntity
 import com.rafa.musicas.data.toMediaItem
 import com.rafa.musicas.player.PlayerManager
 
@@ -34,67 +35,80 @@ fun AlbumsScreen(
     viewModel: LibraryViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val albums by viewModel.albums.collectAsState()
+    val tracks by viewModel.tracks.collectAsState()
+
+    val albums: List<Pair<String, List<MusicEntity>>> =
+        tracks
+            .groupBy { it.album?.ifBlank { "Sem álbum" } ?: "Sem álbum" }
+            .toList()
+            .sortedBy { it.first.lowercase() }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            "Álbuns",
-            style = MaterialTheme.typography.titleLarge
-        )
-
+        Text("Álbuns", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(albums, key = { it.album }) { album ->
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ArtworkBox(
-                            artworkUri = album.artworkUri,
-                            size = 56.dp
-                        )
+        if (albums.isEmpty()) {
+            Text("Nenhum álbum encontrado.")
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(albums, key = { it.first }) { albumGroup ->
+                    val albumName = albumGroup.first
+                    val albumTracks = albumGroup.second
+                    val artworkUri = albumTracks.firstOrNull()?.artworkUri
 
-                        Spacer(Modifier.width(12.dp))
-
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                album.album,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-
-                            Text(
-                                "${album.tracks.size} músicas",
-                                style = MaterialTheme.typography.bodySmall
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            PlayerManager.setQueueAndPlay(
+                                context = context,
+                                items = albumTracks.map { it.toMediaItem() },
+                                startIndex = 0
                             )
                         }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            ArtworkBox(
+                                artworkUri = artworkUri,
+                                size = 56.dp
+                            )
 
-                        IconButton(
-                            onClick = {
-                                PlayerManager.setQueueAndPlay(
-                                    context = context,
-                                    items = album.tracks.map { it.toMediaItem() },
-                                    startIndex = 0
+                            Spacer(Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = albumName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 2
+                                )
+                                Text(
+                                    text = "${albumTracks.size} músicas",
+                                    style = MaterialTheme.typography.bodySmall
                                 )
                             }
-                        ) {
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                contentDescription = "Tocar álbum"
-                            )
+
+                            IconButton(
+                                onClick = {
+                                    PlayerManager.setQueueAndPlay(
+                                        context = context,
+                                        items = albumTracks.map { it.toMediaItem() },
+                                        startIndex = 0
+                                    )
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = "Tocar álbum"
+                                )
+                            }
                         }
                     }
                 }
