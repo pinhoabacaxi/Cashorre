@@ -2,6 +2,7 @@ package com.rafa.musicas.player
 
 import android.app.PendingIntent
 import android.content.Intent
+import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.rafa.musicas.MainActivity
@@ -15,7 +16,7 @@ class PlaybackService : MediaSessionService() {
 
         val player = PlayerManager.get(this)
 
-        val sessionActivityPendingIntent = PendingIntent.getActivity(
+        val pendingIntent = PendingIntent.getActivity(
             this,
             0,
             Intent(this, MainActivity::class.java),
@@ -23,8 +24,23 @@ class PlaybackService : MediaSessionService() {
         )
 
         mediaSession = MediaSession.Builder(this, player)
-            .setSessionActivity(sessionActivityPendingIntent)
+            .setSessionActivity(pendingIntent)
             .build()
+
+        player.addListener(
+            object : Player.Listener {
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    PlayerManager.saveQueue(this@PlaybackService)
+                }
+
+                override fun onMediaItemTransition(
+                    mediaItem: androidx.media3.common.MediaItem?,
+                    reason: Int
+                ) {
+                    PlayerManager.saveQueue(this@PlaybackService)
+                }
+            }
+        )
     }
 
     override fun onGetSession(
@@ -36,7 +52,7 @@ class PlaybackService : MediaSessionService() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = mediaSession?.player
 
-        if (player == null || !player.playWhenReady || player.mediaItemCount == 0) {
+        if (player == null || !player.isPlaying) {
             stopSelf()
         }
     }
@@ -48,6 +64,7 @@ class PlaybackService : MediaSessionService() {
         }
 
         mediaSession = null
+
         super.onDestroy()
     }
 }
