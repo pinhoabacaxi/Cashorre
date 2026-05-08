@@ -63,6 +63,8 @@ kotlin {
 dependencies {
     val roomVersion = "2.6.1"
 
+
+    implementation("com.github.evgenii:jsevaluator:1.0")
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
