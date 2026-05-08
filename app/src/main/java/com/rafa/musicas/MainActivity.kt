@@ -11,7 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.rafa.musicas.data.PlaylistStore
 import com.rafa.musicas.ui.AppRoot
-import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.musicas.AppCompatActivity
 import android.util.Log
 import android.widget.TextView
 import com.maxrave.musicas.R
