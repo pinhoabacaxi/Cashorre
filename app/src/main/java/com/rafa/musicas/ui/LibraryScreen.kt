@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
@@ -65,6 +66,7 @@ fun LibraryScreen(
     val scanStatus by viewModel.scanStatus.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val filteredTracks by viewModel.filteredTracks.collectAsState()
+    val sortMode by viewModel.sortMode.collectAsState()
     
     var selectedTrack by remember { mutableStateOf<MusicEntity?>(null) }
     var showCreatePlaylist by remember { mutableStateOf(false) }
@@ -129,13 +131,60 @@ fun LibraryScreen(
             label = {
                 Text("Buscar músicas")
             },
+            Spacer(Modifier.height(8.dp))
+
+        Row(
+             modifier = Modifier.fillMaxWidth(),
+             horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            SortChip(
+                text = "Nome",
+                selected = sortMode == LibrarySortMode.TITLE,
+                onClick = {
+                    viewModel.setSortMode(
+                        LibrarySortMode.TITLE
+                    )
+                }
+            )
+
+            SortChip(
+                text = "Artista",
+                selected = sortMode == LibrarySortMode.ARTIST,
+                onClick = {
+                    viewModel.setSortMode(
+                        LibrarySortMode.ARTIST
+                    )
+                }
+            )
+
+            SortChip(
+                text = "Álbum",
+                selected = sortMode == LibrarySortMode.ALBUM,
+                onClick = {
+                    viewModel.setSortMode(
+                LibrarySortMode.ALBUM
+                    )
+                }
+            )
+
+            SortChip(
+                text = "Recentes",
+                selected = sortMode == LibrarySortMode.RECENT,
+                onClick = {
+                    viewModel.setSortMode(
+                LibrarySortMode.RECENT
+                    )
+                }
+            )
+        }
             leadingIcon = {
                 Icon(
                     Icons.Default.Search,
                     contentDescription = null
                 )
-            }
-        )
+             }
+         )
 
         Spacer(Modifier.height(8.dp))
 
@@ -530,6 +579,21 @@ private fun AddToPlaylistDialog(
             TextButton(onClick = onDismiss) {
                 Text("Fechar")
             }
+        }
+    )
+}
+@Composable
+private fun SortChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+
+    androidx.compose.material3.FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(text)
         }
     )
 }
