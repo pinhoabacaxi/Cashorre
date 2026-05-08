@@ -73,35 +73,13 @@ fun LibraryScreen(
             .fillMaxSize()
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Biblioteca",
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                Text(
-                    text = "${tracks.size} músicas",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Button(onClick = { viewModel.scanDevice() }) {
-                Icon(
-                    imageVector = Icons.Default.LibraryMusic,
-                    contentDescription = null
-                )
-                Text(" Escanear")
-            }
-        }
+        HeaderSection(
+            totalTracks = tracks.size,
+            onScan = { viewModel.scanDevice() }
+        )
 
         scanStatus?.let { status ->
             Spacer(Modifier.height(4.dp))
-
             Text(
                 text = status,
                 style = MaterialTheme.typography.bodySmall,
@@ -122,15 +100,11 @@ fun LibraryScreen(
             singleLine = true,
             label = { Text("Buscar") },
             leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null
-                )
+                Icon(Icons.Default.Search, contentDescription = null)
             }
         )
 
-
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(6.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -150,15 +124,14 @@ fun LibraryScreen(
 
             AssistChip(
                 onClick = onOpenArtists,
-                label = { Text("Artistas") }
+                label = { Text("Artistas", maxLines = 1) }
             )
 
-           AssistChip(
+            AssistChip(
                 onClick = onOpenAlbums,
-                label = { Text("Álbuns") }
+                label = { Text("Álbuns", maxLines = 1) }
             )
         }
-   }
 
         Spacer(Modifier.height(6.dp))
 
@@ -193,14 +166,14 @@ fun LibraryScreen(
                         },
                         onPlayNext = {
                             PlayerManager.playNext(
-                                context,
-                                track.toMediaItem()
+                                context = context,
+                                item = track.toMediaItem()
                             )
                         },
                         onAddToQueue = {
                             PlayerManager.addToQueueEnd(
-                                context,
-                                track.toMediaItem()
+                                context = context,
+                                item = track.toMediaItem()
                             )
                         }
                     )
@@ -223,39 +196,50 @@ fun LibraryScreen(
     }
 
     if (showCreatePlaylist) {
-        AlertDialog(
-            onDismissRequest = { showCreatePlaylist = false },
-            title = { Text("Nova playlist") },
-            text = {
-                OutlinedTextField(
-                    value = newPlaylistName,
-                    onValueChange = { newPlaylistName = it },
-                    label = { Text("Nome da playlist") },
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (newPlaylistName.isNotBlank()) {
-                            viewModel.createPlaylist(newPlaylistName)
-                        }
-
-                        newPlaylistName = ""
-                        showCreatePlaylist = false
-                    }
-                ) {
-                    Text("Criar")
+        CreatePlaylistDialog(
+            playlistName = newPlaylistName,
+            onNameChange = { newPlaylistName = it },
+            onDismiss = { showCreatePlaylist = false },
+            onConfirm = {
+                if (newPlaylistName.isNotBlank()) {
+                    viewModel.createPlaylist(newPlaylistName)
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showCreatePlaylist = false }
-                ) {
-                    Text("Cancelar")
-                }
+                newPlaylistName = ""
+                showCreatePlaylist = false
             }
         )
+    }
+}
+
+@Composable
+private fun HeaderSection(
+    totalTracks: Int,
+    onScan: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Biblioteca",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                text = "$totalTracks músicas",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        Button(onClick = onScan) {
+            Icon(
+                imageVector = Icons.Default.LibraryMusic,
+                contentDescription = null
+            )
+            Text(" Escanear")
+        }
     }
 }
 
@@ -303,7 +287,12 @@ private fun FilterChipButton(
     FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(label, maxLines = 1) },
+        label = {
+            Text(
+                text = label,
+                maxLines = 1
+            )
+        },
         leadingIcon = {
             if (selected) {
                 Icon(
@@ -438,7 +427,11 @@ private fun AddToPlaylistDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(track.displayName)
+                Text(
+                    text = track.displayName,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
 
                 if (playlists.isEmpty()) {
                     Text("Nenhuma playlist criada.")
@@ -465,6 +458,37 @@ private fun AddToPlaylistDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Fechar")
+            }
+        }
+    )
+}
+
+@Composable
+private fun CreatePlaylistDialog(
+    playlistName: String,
+    onNameChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nova playlist") },
+        text = {
+            OutlinedTextField(
+                value = playlistName,
+                onValueChange = onNameChange,
+                label = { Text("Nome da playlist") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Criar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
             }
         }
     )
