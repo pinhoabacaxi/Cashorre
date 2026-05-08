@@ -17,6 +17,12 @@ import com.rafa.musicas.data.ArtistGroup
 import com.rafa.musicas.data.groupTracksByAlbum
 import com.rafa.musicas.data.groupTracksByArtist
 
+enum class LibrarySortMode {
+    TITLE,
+    ARTIST,
+    ALBUM,
+    RECENT
+}
 enum class LibraryFilter {
     ALL,
     FAVORITES,
@@ -31,6 +37,11 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private val filter = MutableStateFlow(LibraryFilter.ALL)
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
+    private val _sortMode =
+        MutableStateFlow(LibrarySortMode.TITLE)
+
+    val sortMode: StateFlow<LibrarySortMode> =
+        _sortMode
     private val allTracks =
         repository.observeAllTracks()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -38,27 +49,71 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     val filteredTracks =
         combine(
             tracks,
-            searchQuery
-        ) { tracksList, query ->
+            searchQuery,
+            sortMode
+        ) { tracksList, query, mode ->
 
-            if (query.isBlank()) {
-                tracksList
-            } else {
+            val filtered =
+                if (query.isBlank()) {
+                    tracksList
+                } else {
 
-                val q = query.trim().lowercase()
+                    val q = query.trim().lowercase()
 
-                tracksList.filter { track ->
+                    tracksList.filter { track ->
 
-                     track.displayName.lowercase().contains(q) ||
-                     track.author.lowercase().contains(q) ||
-                     (track.album?.lowercase()?.contains(q) == true)
-                 }
-             }
-         }.stateIn(
-             viewModelScope,
-             SharingStarted.WhileSubscribed(5000),
-             emptyList()
-         )
+                        track.displayName
+                            .lowercase()
+                            .contains(q)
+
+                        ||
+
+                        track.author
+                            .lowercase()
+                            .contains(q)
+
+                        ||
+
+                        (
+                            track.album
+                                ?.lowercase()
+                                ?.contains(q)
+                                == true
+                        )
+                    }
+                }
+
+            when (mode) {
+
+                LibrarySortMode.TITLE -> {
+                    filtered.sortedBy {
+                        it.displayName.lowercase()
+                    }
+                }
+
+                LibrarySortMode.ARTIST -> {
+                     filtered.sortedBy {
+                        it.author.lowercase()
+                     }
+                }
+
+                LibrarySortMode.ALBUM -> {
+                    filtered.sortedBy {
+                        it.album?.lowercase() ?: ""
+                    }
+                }
+
+                LibrarySortMode.RECENT -> {
+                    filtered.sortedByDescending {
+                        it.id
+                    }
+                }
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
     val favorites: StateFlow<List<MusicEntity>> =
         repository.observeFavorites()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -84,6 +139,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         query.value = value
     }
 
+    fun setSortMode(mode: LibrarySortMode) {
+         _sortMode.value = mode
+    }
     fun setFilter(value: LibraryFilter) {
         filter.value = value
     }
