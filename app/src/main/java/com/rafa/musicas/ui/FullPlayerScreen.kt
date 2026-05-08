@@ -38,10 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
 import com.rafa.musicas.player.PlayerManager
 import kotlinx.coroutines.delay
 import kotlin.math.max
+import androidx.media3.common.Player
+import androidx.compose.material.icons.filled.RepeatOne
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,8 +92,8 @@ fun FullPlayerScreen(
         mutableStateOf(player.shuffleModeEnabled)
     }
 
-    var repeatEnabled by remember {
-        mutableStateOf(player.repeatMode != Player.REPEAT_MODE_OFF)
+    var repeatMode by remember {
+        mutableIntStateOf(player.repeatMode)
     }
 
     LaunchedEffect(Unit) {
