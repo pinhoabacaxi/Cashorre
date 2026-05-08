@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rafa.musicas.data.db.MusicEntity
 import com.rafa.musicas.data.toMediaItem
 import com.rafa.musicas.player.PlayerManager
 
@@ -33,60 +34,72 @@ fun ArtistsScreen(
     viewModel: LibraryViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val artists by viewModel.artists.collectAsState()
+    val tracks by viewModel.tracks.collectAsState()
+
+    val artists: List<Pair<String, List<MusicEntity>>> =
+        tracks
+            .groupBy { it.author.ifBlank { "Desconhecido" } }
+            .toList()
+            .sortedBy { it.first.lowercase() }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            "Artistas",
-            style = MaterialTheme.typography.titleLarge
-        )
-
+        Text("Artistas", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(artists, key = { it.artist }) { artist ->
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                artist.artist,
-                                style = MaterialTheme.typography.titleMedium
-                            )
+        if (artists.isEmpty()) {
+            Text("Nenhum artista encontrado.")
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(artists, key = { it.first }) { artistGroup ->
+                    val artistName = artistGroup.first
+                    val artistTracks = artistGroup.second
 
-                            Text(
-                                "${artist.tracks.size} músicas",
-                                style = MaterialTheme.typography.bodySmall
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            PlayerManager.setQueueAndPlay(
+                                context = context,
+                                items = artistTracks.map { it.toMediaItem() },
+                                startIndex = 0
                             )
                         }
-
-                        IconButton(
-                            onClick = {
-                                PlayerManager.setQueueAndPlay(
-                                    context = context,
-                                    items = artist.tracks.map { it.toMediaItem() },
-                                    startIndex = 0
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = artistName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 2
+                                )
+                                Text(
+                                    text = "${artistTracks.size} músicas",
+                                    style = MaterialTheme.typography.bodySmall
                                 )
                             }
-                        ) {
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                contentDescription = "Tocar artista"
-                            )
+
+                            IconButton(
+                                onClick = {
+                                    PlayerManager.setQueueAndPlay(
+                                        context = context,
+                                        items = artistTracks.map { it.toMediaItem() },
+                                        startIndex = 0
+                                    )
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = "Tocar artista"
+                                )
+                            }
                         }
                     }
                 }
