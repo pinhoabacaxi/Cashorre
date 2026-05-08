@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         setContentView(R.layout.activity_main)
-        //val videoId = "d40rzwlq8l4"
+            val videoId = "d40rzwlq8l4"
             val listVideoId = listOf<String>("d40rzwlq8l4", "Q2T8-q9fGSI", "UzvbmzVDCQ4", "aaMv6SJafPA", "JvOg0TSvdGU")
             val tv = findViewById<TextView>(R.id.textView)
             val yt = YTExtractor(con = this@MainActivity, CACHING = false, LOGGING = true, retryCount = 3)
