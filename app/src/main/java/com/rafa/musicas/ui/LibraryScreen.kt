@@ -110,7 +110,7 @@ fun LibraryScreen(
             )
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(6.dp))
 
         OutlinedTextField(
             value = searchQuery,
@@ -187,22 +187,18 @@ fun LibraryScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
+            AssistChip(
                 onClick = onOpenArtists,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Artistas")
-            }
+                label = { Text("Artistas") }
+            )
 
-            Button(
+            AssistChip(
                 onClick = onOpenAlbums,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Álbuns")
-            }
+                label = { Text("Álbuns") }
+            )
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(6.dp))
 
         if (tracks.isEmpty()) {
             EmptyLibraryState(
