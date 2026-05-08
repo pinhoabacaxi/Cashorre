@@ -252,14 +252,6 @@ fun PlayerMiniBar(
                             repeatOne =
                                 player.repeatMode ==
                                     Player.REPEAT_MODE_ONE
-
-                            PlayerManager.saveQueue(
-                                player.applicationLooper
-                                    .thread
-                                    .contextClassLoader
-                                    ?.getResource("")
-                                    ?.let { null }
-                            )
                         }
                     ) {
 
@@ -268,7 +260,7 @@ fun PlayerMiniBar(
                                 Icons.Default.RepeatOne,
 
                             contentDescription =
-                                "Repetir música",
+                               "Repetir música",
 
                             tint =
                                 if (repeatOne) {
