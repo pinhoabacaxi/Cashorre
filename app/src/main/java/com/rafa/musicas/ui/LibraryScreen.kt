@@ -60,7 +60,8 @@ fun LibraryScreen(
     val playlists by viewModel.playlists.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
-
+    val scanStatus by viewModel.scanStatus.collectAsState()
+    
     var selectedTrack by remember { mutableStateOf<MusicEntity?>(null) }
     var showCreatePlaylist by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
@@ -102,6 +103,15 @@ fun LibraryScreen(
                 Text(" Escanear")
             }
         }
+        scanStatus?.let { status ->
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = status,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+             )
+         }
 
         Spacer(Modifier.height(12.dp))
 
