@@ -63,6 +63,7 @@ fun LibraryScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
     val scanStatus by viewModel.scanStatus.collectAsState()
+    val sortMode by viewModel.sortMode.collectAsState()
 
     var selectedTrack by remember { mutableStateOf<MusicEntity?>(null) }
     var showCreatePlaylist by remember { mutableStateOf(false) }
@@ -148,6 +149,36 @@ fun LibraryScreen(
                 selected = selectedFilter == LibraryFilter.RECENT,
                 onClick = { viewModel.setFilter(LibraryFilter.RECENT) }
             )
+            Spacer(Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SortChip(
+                    text = "Nome",
+                    selected = sortMode == LibrarySortMode.TITLE,
+                    onClick = { viewModel.setSortMode(LibrarySortMode.TITLE) }
+                )
+
+                SortChip(
+                    text = "Artista",
+                    selected = sortMode == LibrarySortMode.ARTIST,
+                    onClick = { viewModel.setSortMode(LibrarySortMode.ARTIST) }
+                )
+
+                SortChip(
+                    text = "Álbum",
+                    selected = sortMode == LibrarySortMode.ALBUM,
+                    onClick = { viewModel.setSortMode(LibrarySortMode.ALBUM) }
+                )
+
+                 SortChip(
+                    text = "Recentes",
+                    selected = sortMode == LibrarySortMode.RECENT,
+                    onClick = { viewModel.setSortMode(LibrarySortMode.RECENT) }
+                )
+            }
         }
 
         Spacer(Modifier.height(8.dp))
