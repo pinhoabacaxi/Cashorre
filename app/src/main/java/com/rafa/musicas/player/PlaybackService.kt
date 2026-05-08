@@ -2,14 +2,10 @@ package com.rafa.musicas.player
 
 import android.app.PendingIntent
 import android.content.Intent
-import androidx.annotation.OptIn
-import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.rafa.musicas.MainActivity
 
-@OptIn(UnstableApi::class)
 class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
@@ -29,21 +25,6 @@ class PlaybackService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(sessionActivityPendingIntent)
             .build()
-
-        player.addListener(
-            object : Player.Listener {
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    PlayerManager.saveQueue(this@PlaybackService)
-                }
-
-                override fun onMediaItemTransition(
-                    mediaItem: androidx.media3.common.MediaItem?,
-                    reason: Int
-                ) {
-                    PlayerManager.saveQueue(this@PlaybackService)
-                }
-            }
-        )
     }
 
     override fun onGetSession(
@@ -65,6 +46,7 @@ class PlaybackService : MediaSessionService() {
             player.release()
             release()
         }
+
         mediaSession = null
         super.onDestroy()
     }
