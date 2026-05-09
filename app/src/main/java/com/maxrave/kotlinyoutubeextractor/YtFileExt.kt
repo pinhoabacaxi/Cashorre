@@ -15,3 +15,6 @@ fun ArrayList<YtFile>.bestQuality(): YtFile? {
     if (this.isEmpty()) return null
     return this.maxByOrNull { it.meta?.audioBitrate ?: 0 }
 }
+fun ArrayList<YtFile>.bestQuality(): YtFile? {
+    return this.maxByOrNull { it.meta?.audioBitrate ?: 0 }
+}
