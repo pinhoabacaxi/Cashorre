@@ -1,42 +1,33 @@
 package com.maxrave.kotlinyoutubeextractor
 
-class Format {
+data class Format(
+    val itag: Int,
+    val ext: String? = null,
+    val height: Int = -1,
+    val fps: Int = 30,
+    val videoCodec: VCodec? = VCodec.NONE,
+    val audioCodec: ACodec? = ACodec.NONE,
+    val audioBitrate: Int = -1,
+    val isDashContainer: Boolean = false,
+    val isHlsContent: Boolean = false
+) {
     enum class VCodec { H263, H264, MPEG4, VP8, VP9, NONE }
     enum class ACodec { MP3, AAC, VORBIS, OPUS, NONE }
+        // Apenas o itag (o resto usa o padrão)
+    val f1 = Format(itag = 22)
 
-    val itag: Int
-    val ext: String?
-    val height: Int
-    val fps: Int
-    val videoCodec: VCodec?
-    val audioCodec: ACodec?
-    val audioBitrate: Int
-    val isDashContainer: Boolean
-    val isHlsContent: Boolean
+// Itag e altura
+     val f2 = Format(itag = 18, height = 360)
 
-    internal constructor(itag: Int, ext: String?, height: Int, vCodec: VCodec?, aCodec: ACodec?, audioBitrate: Int, isDashContainer: Boolean) {
-        this.itag = itag
-        this.ext = ext
-        this.height = height
-        this.fps = 30
-        this.videoCodec = vCodec
-        this.audioCodec = aCodec
-        this.audioBitrate = audioBitrate
-        this.isDashContainer = isDashContainer
-        this.isHlsContent = false
-    }
+// Especificando quase tudo, mas mantendo a ordem ou usando nomes
+    val f3 = Format(
+        itag = 137, 
+        ext = "mp4", 
+        height = 1080, 
+        videoCodec = Format.VCodec.H264, 
+        isDashContainer = true
+    )
 
-    internal constructor(itag: Int, ext: String?, height: Int, vCodec: VCodec?, aCodec: ACodec?, isDashContainer: Boolean) 
-        : this(itag, ext, height, vCodec, aCodec, -1, isDashContainer)
-
-    internal constructor(itag: Int, ext: String?, vCodec: VCodec?, aCodec: ACodec?, audioBitrate: Int, isDashContainer: Boolean) 
-        : this(itag, ext, -1, vCodec, aCodec, audioBitrate, isDashContainer)
-
-    internal constructor(itag: Int, ext: String?, height: Int, vCodec: VCodec?, aCodec: ACodec?, audioBitrate: Int, isDashContainer: Boolean, isHlsContent: Boolean) 
-        : this(itag, ext, height, vCodec, aCodec, audioBitrate, isDashContainer) {
-        // Para HLS setamos o boolean após o construtor primário
-    }
-
-    internal constructor(itag: Int, ext: String?, height: Int, vCodec: VCodec?, fps: Int, aCodec: ACodec?, isDashContainer: Boolean) 
-        : this(itag, ext, height, vCodec, aCodec, -1, isDashContainer)
 }
+ 
+
