@@ -20,13 +20,13 @@ data class Format(
      val f2 = Format(itag = 18, height = 360)
 
 // Especificando quase tudo, mas mantendo a ordem ou usando nomes
-    val f3 = Format(
-        itag = 137, 
-        ext = "mp4", 
-        height = 1080, 
-        videoCodec = Format.VCodec.H264, 
-        isDashContainer = true
-    )
+     val f3 = Format(
+         itag = 137, 
+         ext = "mp4", 
+         height = 1080, 
+         videoCodec = Format.VCodec.H264, 
+         isDashContainer = true
+     )
 
 }
  
