@@ -14,6 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "musicas"
 include(":app")
-include (":kotlinYoutubeExtractor")
     }
 }
