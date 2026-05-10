@@ -57,7 +57,7 @@ kotlin {
 
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        freeCompilerArgs.add("-opt-in=androidx.media3.common.util.UnstableApi")
+        freeCompilerArgs.add("-opt-in=androidx.media3.leApi")
     }
 }
 dependencies {
